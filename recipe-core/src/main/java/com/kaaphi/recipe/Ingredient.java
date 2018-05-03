@@ -36,4 +36,8 @@ public class Ingredient {
   public int hashCode() {
     return Objects.hash(name, quantity);
   }
+  
+  public String toString() {
+    return String.format("Ingredient[<%s> <%s>]", quantity, name);
+  }
 }
