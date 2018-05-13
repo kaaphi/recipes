@@ -12,6 +12,6 @@ public class TestJsonFileRepo {
     String json = "{\"title\":\"ABCD\",\"ingredients\":[{\"name\":\"one\"},{\"name\":\"two\"},{\"name\":\"three\"}],\"method\":\"Make the food\\r\\nand\\r\\neat it.\"}";
     
     System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(
-        new StoredRecipe(UUID.randomUUID(),RecipeGenerator.randomRecipe(),Instant.now(), Instant.now())));
+        new RecipeBookEntry(UUID.randomUUID(),RecipeGenerator.randomRecipe(),Instant.now(), Instant.now())));
   }
 }

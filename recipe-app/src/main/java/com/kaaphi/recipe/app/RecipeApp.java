@@ -9,17 +9,22 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import io.javalin.Javalin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RecipeApp {
+  private static final Logger log = LoggerFactory.getLogger(RecipeApp.class);
+
+  
   private final Javalin app;
     
   @Inject
-  public RecipeApp(RecipeController controller) {
-    app = Javalin.create()
-        .port(7000);
+  public RecipeApp(Javalin app, RecipeController controller) {
+    this.app = app;
+    
     
     app.routes(() -> {
-      path(Path.RECIPES, () -> {
+      path(Path.RECIPE_API, () -> {
         get(controller::readAllRecipes);
         post(controller::createRecipe);
         
@@ -27,17 +32,24 @@ public class RecipeApp {
           get(controller::readRecipe);
           put(controller::updateRecipe);
           delete(controller::deleteRecipe);
-          
-          path("render", () -> {
-            get(controller::render);
-          });
         });
       });
+      
+      path("/", () -> {
+        get(ctx -> ctx.renderVelocity("/index.html", controller.getRecipeListModel(ctx)));
+      });
+      
+      path(Path.RECIPE, () -> {
+        get(ctx -> ctx.renderVelocity("/recipe.html", controller.getRecipeModel(ctx)));
+      });
     });
+    
+    log.info("App initialized.");
   }
   
   public void start() {
-    app.start();    
+    app.start();   
+    log.info("App started.");
   }
   
   public static void main(String[] args) {

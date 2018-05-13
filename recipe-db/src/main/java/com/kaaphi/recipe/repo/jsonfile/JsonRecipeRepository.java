@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.kaaphi.recipe.StoredRecipe;
+import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.RecipeRepositoryException;
 import java.io.BufferedWriter;
@@ -31,16 +31,16 @@ public class JsonRecipeRepository implements RecipeRepository {
   private final Gson gson;
   
   @Inject
-  public JsonRecipeRepository(@Named("jsonRepoPath") String store, Gson gson) {
+  public JsonRecipeRepository(@Named("jsonRepoPath") String store, @Named("repoGson") Gson gson) {
     this.store = Paths.get(store);
     this.gson = gson;
   }
     
   @Override
-  public Set<StoredRecipe> getAll() {
+  public Set<RecipeBookEntry> getAll() {
     if(Files.exists(store)) {
       try(Reader in = Files.newBufferedReader(store, UTF8)) {
-        return gson.fromJson(in, new TypeToken<LinkedHashSet<StoredRecipe>>(){}.getType());
+        return gson.fromJson(in, new TypeToken<LinkedHashSet<RecipeBookEntry>>(){}.getType());
       } catch (IOException e) {
         throw new RecipeRepositoryException(e);
       }
@@ -50,7 +50,7 @@ public class JsonRecipeRepository implements RecipeRepository {
   }
   
   @Override
-  public StoredRecipe get(UUID id) {
+  public RecipeBookEntry get(UUID id) {
     return getAll().stream()
     .filter(r -> id.equals(r.getId()))
     .findFirst()
@@ -59,29 +59,29 @@ public class JsonRecipeRepository implements RecipeRepository {
 
   @Override
   public void deleteById(Set<UUID> toRemove) {
-    Map<UUID, StoredRecipe> current = toMap(getAll());
+    Map<UUID, RecipeBookEntry> current = toMap(getAll());
     current.keySet().removeAll(toRemove);
     writeList(current.values()); 
   }
 
   @Override
-  public void saveAll(Set<StoredRecipe> recipes) {
-    Map<UUID, StoredRecipe> current = toMap(getAll());
+  public void saveAll(Set<RecipeBookEntry> recipes) {
+    Map<UUID, RecipeBookEntry> current = toMap(getAll());
     current.putAll(toMap(recipes));
     writeList(current.values());    
   }
   
-  private void writeList(Collection<StoredRecipe> all) {
+  private void writeList(Collection<RecipeBookEntry> all) {
     try(BufferedWriter out = Files.newBufferedWriter(store, UTF8)) {
-      gson.toJson(all, new TypeToken<Collection<StoredRecipe>>(){}.getType(), out);
+      gson.toJson(all, new TypeToken<Collection<RecipeBookEntry>>(){}.getType(), out);
     } catch (IOException e) {
       throw new RecipeRepositoryException(e);
     }
   }
   
-  private static Map<UUID, StoredRecipe> toMap(Set<StoredRecipe> recipes) {
+  private static Map<UUID, RecipeBookEntry> toMap(Set<RecipeBookEntry> recipes) {
     return recipes.stream()
-        .collect(Collectors.toMap(StoredRecipe::getId, Function.identity(), (a,b)->{throw new IllegalStateException();}, LinkedHashMap::new));
+        .collect(Collectors.toMap(RecipeBookEntry::getId, Function.identity(), (a,b)->{throw new IllegalStateException();}, LinkedHashMap::new));
   }
 
 

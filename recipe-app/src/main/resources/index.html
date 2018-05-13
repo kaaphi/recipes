@@ -1,0 +1,9 @@
+<html>
+  <body>
+  <ul>
+   	#foreach( $recipe in $allRecipes )
+    <li><a href="recipe/$recipe.Id">$recipe.Recipe.Title</a></li>
+	#end
+  </ul>
+  </body>
+</html>

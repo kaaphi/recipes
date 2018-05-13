@@ -4,12 +4,12 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public class StoredRecipe {
+public class RecipeBookEntry {
   private final UUID id;
   private final Recipe recipe;
   private final Instant created;
   private final Instant updated;
-  public StoredRecipe(UUID id, Recipe recipe, Instant created, Instant updated) {
+  public RecipeBookEntry(UUID id, Recipe recipe, Instant created, Instant updated) {
     super();
     this.id = id;
     this.recipe = recipe;
@@ -29,8 +29,8 @@ public class StoredRecipe {
     return updated;
   }
   public boolean equals(Object o) {
-    if(o instanceof StoredRecipe) {
-      StoredRecipe that = (StoredRecipe)o;
+    if(o instanceof RecipeBookEntry) {
+      RecipeBookEntry that = (RecipeBookEntry)o;
       return Objects.equals(this.id, that.id)
           && Objects.equals(this.recipe, that.recipe)
           && Objects.equals(this.created, that.created)
