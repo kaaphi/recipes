@@ -6,13 +6,11 @@ import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TextFormat {
-  public Recipe fromText(UUID id, Reader reader) {
+  public Recipe fromText(Reader reader) {
     IngredientParser ingredientParser = new IngredientParser();
     
     BufferedReader in = new BufferedReader(reader);
@@ -25,7 +23,7 @@ public class TextFormat {
     
     String method = nextChunk(it).collect(Collectors.joining("\r\n"));
     
-    return new Recipe(id, title, ingredients, method);
+    return new Recipe(title, ingredients, method);
   }
   
   private static Stream<String> nextChunk(Iterator<String> it) {

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.kaaphi.recipe.Recipe;
+import com.kaaphi.recipe.StoredRecipe;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.RecipeRepositoryException;
 import java.io.BufferedWriter;
@@ -37,10 +37,10 @@ public class JsonRecipeRepository implements RecipeRepository {
   }
     
   @Override
-  public Set<Recipe> getAll() {
+  public Set<StoredRecipe> getAll() {
     if(Files.exists(store)) {
       try(Reader in = Files.newBufferedReader(store, UTF8)) {
-        return gson.fromJson(in, new TypeToken<LinkedHashSet<Recipe>>(){}.getType());
+        return gson.fromJson(in, new TypeToken<LinkedHashSet<StoredRecipe>>(){}.getType());
       } catch (IOException e) {
         throw new RecipeRepositoryException(e);
       }
@@ -50,7 +50,7 @@ public class JsonRecipeRepository implements RecipeRepository {
   }
   
   @Override
-  public Recipe get(UUID id) {
+  public StoredRecipe get(UUID id) {
     return getAll().stream()
     .filter(r -> id.equals(r.getId()))
     .findFirst()
@@ -59,29 +59,29 @@ public class JsonRecipeRepository implements RecipeRepository {
 
   @Override
   public void deleteById(Set<UUID> toRemove) {
-    Map<UUID, Recipe> current = toMap(getAll());
+    Map<UUID, StoredRecipe> current = toMap(getAll());
     current.keySet().removeAll(toRemove);
     writeList(current.values()); 
   }
 
   @Override
-  public void saveAll(Set<Recipe> recipes) {
-    Map<UUID, Recipe> current = toMap(getAll());
+  public void saveAll(Set<StoredRecipe> recipes) {
+    Map<UUID, StoredRecipe> current = toMap(getAll());
     current.putAll(toMap(recipes));
     writeList(current.values());    
   }
   
-  private void writeList(Collection<Recipe> all) {
+  private void writeList(Collection<StoredRecipe> all) {
     try(BufferedWriter out = Files.newBufferedWriter(store, UTF8)) {
-      gson.toJson(all, new TypeToken<Collection<Recipe>>(){}.getType(), out);
+      gson.toJson(all, new TypeToken<Collection<StoredRecipe>>(){}.getType(), out);
     } catch (IOException e) {
       throw new RecipeRepositoryException(e);
     }
   }
   
-  private static Map<UUID, Recipe> toMap(Set<Recipe> recipes) {
+  private static Map<UUID, StoredRecipe> toMap(Set<StoredRecipe> recipes) {
     return recipes.stream()
-        .collect(Collectors.toMap(Recipe::getId, Function.identity(), (a,b)->{throw new IllegalStateException();}, LinkedHashMap::new));
+        .collect(Collectors.toMap(StoredRecipe::getId, Function.identity(), (a,b)->{throw new IllegalStateException();}, LinkedHashMap::new));
   }
 
 

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.kaaphi.recipe.Recipe;
+import com.kaaphi.recipe.StoredRecipe;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import io.javalin.Context;
@@ -24,10 +25,10 @@ public class RecipeController {
   }
   
   public void readAllRecipes(Context ctx) {
-    Set<Recipe> recipes = repo.getAll();
+    Set<StoredRecipe> recipes = repo.getAll();
     
     StringBuilder sb = new StringBuilder();
-    gson.toJson(recipes, new TypeToken<Collection<Recipe>>(){}.getType(), sb);
+    gson.toJson(recipes, new TypeToken<Collection<StoredRecipe>>(){}.getType(), sb);
     
     ctx.result(sb.toString());    
   }
@@ -35,7 +36,7 @@ public class RecipeController {
   public void readRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
     
-    Recipe recipe = repo.get(uuid);
+    StoredRecipe recipe = repo.get(uuid);
     
     if(recipe != null) {
       ctx.result(gson.toJson(recipe));
@@ -47,20 +48,14 @@ public class RecipeController {
   public void updateRecipe(Context ctx) {
     UUID id = parseUUID(ctx);
     Recipe recipe = gson.fromJson(ctx.body(), Recipe.class);
-    
-    if(recipe.getId() != null && !recipe.getId().equals(id)) {
-      throw new IllegalArgumentException("IDs do not match!");
-    }
-    
-    repo.save(recipe);
+        
+    repo.save(id, recipe);
   }
   
   public void createRecipe(Context ctx) {
     Recipe recipe = gson.fromJson(ctx.body(), Recipe.class);
     
-    recipe = recipe.withId(UUID.randomUUID());
-    
-    repo.save(recipe);
+    repo.save(UUID.randomUUID(), recipe);
     
     ctx.result(gson.toJson(recipe));
   }
@@ -72,8 +67,8 @@ public class RecipeController {
   
   public void render(Context ctx) {
     UUID uuid = parseUUID(ctx);
-    Recipe recipe = repo.get(uuid);
-    ctx.result(RecipeMarkdownProcessor.process(recipe));
+    StoredRecipe recipe = repo.get(uuid);
+    ctx.result(RecipeMarkdownProcessor.process(recipe.getRecipe()));
   }
   
   private static UUID parseUUID(Context ctx) {
