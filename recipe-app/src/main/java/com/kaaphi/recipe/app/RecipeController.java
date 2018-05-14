@@ -12,13 +12,11 @@ import com.kaaphi.recipe.txtformat.TextFormat;
 import io.javalin.Context;
 import io.javalin.HaltException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +44,10 @@ public class RecipeController {
   
   public void renderEditRecipe(Context ctx) {
 	  ctx.renderVelocity("/recipe_edit.html", getRecipeEditModel(ctx));
+  }
+  
+  public void renderNewRecipe(Context ctx) {
+    ctx.renderVelocity("/recipe_create.html", new HashMap<>());
   }
   
   public Map<String, Object> getRecipeListModel(Context ctx) {
@@ -114,7 +116,7 @@ public class RecipeController {
   }
   
   public void createRecipe(Context ctx) {
-    Recipe recipe = gson.fromJson(ctx.body(), Recipe.class);
+    Recipe recipe = parseRecipe(ctx);
     
     repo.save(UUID.randomUUID(), recipe);
     

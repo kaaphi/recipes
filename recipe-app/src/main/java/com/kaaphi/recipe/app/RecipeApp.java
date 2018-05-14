@@ -39,9 +39,13 @@ public class RecipeApp {
         get(controller::renderRecipeList);
       });
       
+      path("recipe/new", () -> {
+        get(controller::renderNewRecipe);
+      });
+      
       path(Path.RECIPE, () -> {
         get(controller::renderRecipe);
-        
+                
         path("edit", () -> {
         	get(controller::renderEditRecipe);
         });

@@ -3,8 +3,10 @@
   #head( $recipe.recipe.title )
   <body>
   #scripts()
+  #navbar ( )
   <div class="container-fluid">
   $recipeMarkdown
+  <a href="/recipe/$recipe.id/edit" class="btn btn-primary">Edit</a>
   </div>
   </body>
 </html>

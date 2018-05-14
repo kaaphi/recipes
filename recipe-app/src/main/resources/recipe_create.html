@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
-  #head ( "Edit $recipe.recipe.title" )
+  #head ( "New Recipe" )
   <body>
     #scripts
-    #navbar
+    #navbar ("create")
     <script>
     /*
      * I am not a JS guy. This is totally naive code written from google searches.
@@ -13,7 +13,8 @@
         
   // Redirect on success
   XHR.addEventListener('load', function(event) {
-    window.location.href = "/recipe/$recipe.id";
+  	var recipe = JSON.parse(XHR.responseText)
+    window.location.href = "/recipe/" + recipe.id;
   });
 
   // Alert on error
@@ -21,16 +22,15 @@
     alert('Oops! Something goes wrong.');
   });
   
-  XHR.open('PUT', '/api/recipe/$recipe.id');
+  XHR.open('POST', '/api/recipe');
   XHR.setRequestHeader('Content-Type', 'text/plain');
   XHR.send(document.getElementById('recipeTxt').value);
     }
     </script>
     <div class="container-fluid">
     <form>
- 	  <textarea class="form-control" id="recipeTxt" rows=10>$recipeTxt</textarea>
+ 	  <textarea class="form-control" id="recipeTxt" rows=10></textarea>
  	  <button type="button" class="btn btn-primary" onClick="postRecipe()">Save</button>
- 	  <button type="button" class="btn btn-primary" onClick="window.location.href = '/recipe/$recipe.id'">Cancel</button>
  	</form>
  	</div>
   </body>

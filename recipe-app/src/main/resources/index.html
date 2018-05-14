@@ -3,10 +3,11 @@
   #head ( "Recipes" )
   <body>
   #scripts
+  #navbar ("home")
   <div class="container-fluid">
-  <ul>
+  <ul class="list-group">
    	#foreach( $recipe in $allRecipes )
-    <li><a href="recipe/$recipe.Id">$recipe.Recipe.Title</a></li>
+    <li class="list-group-item"><a href="recipe/$recipe.Id">$recipe.Recipe.Title</a></li>
 	#end
   </ul>
   </div>
