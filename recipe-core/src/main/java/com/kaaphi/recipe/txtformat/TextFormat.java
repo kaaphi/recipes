@@ -5,6 +5,7 @@ import com.kaaphi.recipe.Recipe;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,9 +30,17 @@ public class TextFormat {
     return new Recipe(title, ingredients, method);
   }
   
+  public Recipe fromText(String text) {
+    try(Reader r = new StringReader(text)) {
+      return fromText(r);
+    } catch (IOException e) {
+      throw new Error(e); //this really shouldn't happen with StringBuilder 
+    }
+  }
+  
   public void toText(Recipe recipe, Appendable out) throws IOException {
     out.append(recipe.getTitle());
-    out.append(NEWLINE);
+    out.append(NEWLINE).append(NEWLINE);
     for(Ingredient i : recipe.getIngredients()) {
       if(i.getQuantity().isPresent()) {
         out.append(i.getQuantity().get()).append(" ");
@@ -39,8 +48,19 @@ public class TextFormat {
       out.append(i.getName());
       out.append(NEWLINE);
     }
-    out.append(recipe.getMethod());
-    out.append(NEWLINE);
+    out.append(NEWLINE)
+    .append(recipe.getMethod())
+    .append(NEWLINE);
+  }
+  
+  public String toTextString(Recipe recipe) {
+    StringBuilder sb = new StringBuilder();
+    try {
+      toText(recipe, sb);
+    } catch (IOException e) {
+      throw new Error(e); //this really shouldn't happen with StringBuilder
+    }
+    return sb.toString();
   }
   
   private static Stream<String> nextChunk(Iterator<String> it) {

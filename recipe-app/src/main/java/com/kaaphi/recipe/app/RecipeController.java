@@ -1,5 +1,6 @@
 package com.kaaphi.recipe.app;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.txtformat.TextFormat;
 import io.javalin.Context;
 import io.javalin.HaltException;
 import java.util.Collection;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,19 +27,53 @@ public class RecipeController {
   
   private final RecipeRepository repo;
   private final Gson gson;
+  private final TextFormat txtFormat;
   
   @Inject
-  public RecipeController(Gson gson, RecipeRepository repo) {
+  public RecipeController(Gson gson, RecipeRepository repo, TextFormat txtFormat) {
     this.repo = repo;
     this.gson = gson;
+    this.txtFormat = txtFormat;
+  }
+  
+  public void renderRecipeList(Context ctx) {
+	  ctx.renderVelocity("/index.html", getRecipeListModel(ctx));
+  }
+  
+  public void renderRecipe(Context ctx) {
+	  ctx.renderVelocity("/recipe.html", getRecipeModel(ctx));
+  }
+  
+  public void renderEditRecipe(Context ctx) {
+	  ctx.renderVelocity("/recipe_edit.html", getRecipeEditModel(ctx));
   }
   
   public Map<String, Object> getRecipeListModel(Context ctx) {
-    return new HashMap<>(Collections.singletonMap("allRecipes", repo.getAll()));
+    return model(b -> b.put("allRecipes", repo.getAll()));
+  }
+  
+  public Map<String, Object> getRecipeEditModel(Context ctx) {
+    RecipeBookEntry r = repo.get(parseUUID(ctx));
+    
+    return model(b -> b
+        .put("recipe", r)
+        .put("recipeTxt", txtFormat.toTextString(r.getRecipe()))     
+        );
   }
   
   public Map<String, Object> getRecipeModel(Context ctx) {
-    return Collections.singletonMap("recipe", RecipeMarkdownProcessor.process(repo.get(parseUUID(ctx)).getRecipe()));
+    RecipeBookEntry r = repo.get(parseUUID(ctx));
+    
+    return model(b -> b
+        .put("recipe", r)
+        .put("recipeMarkdown", RecipeMarkdownProcessor.process(r.getRecipe()))
+        );
+  }
+  
+  private static Map<String, Object> model(Consumer<ImmutableMap.Builder<String, Object>> consumer) {
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    consumer.accept(builder);
+    return new HashMap<>(builder.build());
   }
   
   public void readAllRecipes(Context ctx) {
@@ -62,9 +99,18 @@ public class RecipeController {
   
   public void updateRecipe(Context ctx) {
     UUID id = parseUUID(ctx);
-    Recipe recipe = gson.fromJson(ctx.body(), Recipe.class);
+    
+    Recipe recipe = parseRecipe(ctx);
         
     repo.save(id, recipe);
+  }
+  
+  private Recipe parseRecipe(Context ctx) {
+      switch(ctx.contentType()) {
+        case "text/plain" : return txtFormat.fromText(ctx.body());
+        case "application/json" : return gson.fromJson(ctx.body(), Recipe.class);
+        default: throw new HaltException(400);
+      }
   }
   
   public void createRecipe(Context ctx) {
@@ -78,7 +124,7 @@ public class RecipeController {
   public void deleteRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
     repo.delete(uuid);
-  }
+  } 
   
   public void render(Context ctx) {
     UUID uuid = parseUUID(ctx);

@@ -1,9 +1,14 @@
-<html>
+<!doctype html>
+<html lang="en">
+  #head ( "Recipes" )
   <body>
+  #scripts
+  <div class="container-fluid">
   <ul>
    	#foreach( $recipe in $allRecipes )
     <li><a href="recipe/$recipe.Id">$recipe.Recipe.Title</a></li>
 	#end
   </ul>
+  </div>
   </body>
 </html>

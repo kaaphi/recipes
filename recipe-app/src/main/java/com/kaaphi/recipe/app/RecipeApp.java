@@ -36,11 +36,15 @@ public class RecipeApp {
       });
       
       path("/", () -> {
-        get(ctx -> ctx.renderVelocity("/index.html", controller.getRecipeListModel(ctx)));
+        get(controller::renderRecipeList);
       });
       
       path(Path.RECIPE, () -> {
-        get(ctx -> ctx.renderVelocity("/recipe.html", controller.getRecipeModel(ctx)));
+        get(controller::renderRecipe);
+        
+        path("edit", () -> {
+        	get(controller::renderEditRecipe);
+        });
       });
     });
     

@@ -46,10 +46,12 @@ public class RecipeModule extends AbstractModule {
   @Provides
   VelocityEngine provideVelocityEngine() {
     VelocityEngine velocityEngine = new VelocityEngine();
-    velocityEngine.setProperty("resource.loader", "class");
-    velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+    //velocityEngine.setProperty("resource.loader", "class");
+    //velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+    velocityEngine.setProperty("resource.loader", "file");
     velocityEngine.setProperty("velocimacro.library.autoreload", "true");
     velocityEngine.setProperty("file.resource.loader.cache", "false");
+    velocityEngine.setProperty("file.resource.loader.path", "./src/main/resources");
     //velocityEngine.setProperty("velocimacro.permissions.allow.inline.to.replace.global", "true");
     velocityEngine.setProperty("runtime.log.logsystem", new VelocitySLF4JLogChute());
     
