@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -74,7 +75,7 @@ public class EnexToRecipe {
     return export;
   }
   
-  public List<RecipeBookEntry> toRecipeBook(EnExport export, BiConsumer<Note, Throwable> failureHandler) {
+  public Set<RecipeBookEntry> toRecipeBook(EnExport export, BiConsumer<Note, Throwable> failureHandler) {
     return export.getNote().stream()
         .map(note -> {
           try {
@@ -85,7 +86,7 @@ public class EnexToRecipe {
           }
         })
         .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
   }
   
   
@@ -95,10 +96,12 @@ public class EnexToRecipe {
     EnexToRecipe converter = new EnexToRecipe();
     
     AtomicInteger failed = new AtomicInteger();
-    converter.toRecipeBook(converter.loadExport(file), (note, exception) -> {
+    Set<RecipeBookEntry> book = converter.toRecipeBook(converter.loadExport(file), (note, exception) -> {
       System.out.format("Failed: <%s> (%s)%n", note.getTitle(), exception);
       failed.getAndIncrement();
     });
+    
+    
     
     System.out.println(failed);
   }
