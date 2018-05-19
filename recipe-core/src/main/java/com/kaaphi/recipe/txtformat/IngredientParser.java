@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class IngredientParser {
-  private static final Pattern INGREDIENT_PATTERN = Pattern.compile("(((\\d+)(\\s*(\\w*)))\\s+)?(.+)");
+  private static final Pattern INGREDIENT_PATTERN = Pattern.compile("((([0-9\\-/ .]+)(\\s*(\\w*\\.?)))\\s+)?(.+)");
   
   public Ingredient fromString(String line) {
     Matcher m = INGREDIENT_PATTERN.matcher(line);
