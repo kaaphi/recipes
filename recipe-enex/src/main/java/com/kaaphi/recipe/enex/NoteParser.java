@@ -43,7 +43,7 @@ public class NoteParser extends DefaultHandler {
     @Override
     public ParseState endElement(String qName) {
       if("br".equalsIgnoreCase(qName)) {
-        method.append("\r\n");
+        method.append("\r\n\r\n");
       }
       
       if("method".equalsIgnoreCase(method.toString().trim())) {
