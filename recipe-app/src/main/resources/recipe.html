@@ -3,10 +3,27 @@
   #head( $recipe.recipe.title )
   <body>
   #scripts()
-  #navbar ( )
+  #navbar ( "", $recipe.id )
   <div class="container-fluid">
-  $recipeMarkdown
-  <a href="/recipe/$recipe.id/edit" class="btn btn-primary">Edit</a>
-  </div>
+  
+  <div class="row"><div class="col">
+  <h1>$recipe.recipe.title</h1>
+  </div></div>
+  
+  <div class="row"><div class="col">
+  <h2>Ingredients</h2>
+  <ul>
+   	#foreach( $ingredient in $ingredients )
+    <li>$ingredient</li>
+	#end
+  </ul>
+  </div></div>
+  
+  <div class="row"><div class="col">
+  <h2>Method</h2>
+  $method
+  </div></div>
+  
+  
   </body>
 </html>

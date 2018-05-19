@@ -1,5 +1,6 @@
 package com.kaaphi.recipe.app;
 
+import com.github.rjeschke.txtmark.Processor;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -13,10 +14,12 @@ import io.javalin.Context;
 import io.javalin.HaltException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,9 +69,14 @@ public class RecipeController {
   public Map<String, Object> getRecipeModel(Context ctx) {
     RecipeBookEntry r = repo.get(parseUUID(ctx));
     
+    List<String> ingredients = r.getRecipe().getIngredients().stream()
+        .map(i -> i.getQuantity().isPresent() ? String.format("%s %s", i.getQuantity().get(), i.getName()) : i.getName())
+        .collect(Collectors.toList());
+    
     return model(b -> b
         .put("recipe", r)
-        .put("recipeMarkdown", RecipeMarkdownProcessor.process(r.getRecipe()))
+        .put("ingredients", ingredients)
+        .put("method", Processor.process(r.getRecipe().getMethod()))
         );
   }
   

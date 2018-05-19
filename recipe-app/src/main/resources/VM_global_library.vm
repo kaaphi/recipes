@@ -19,10 +19,15 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 #end
 
-#macro ( navbar $active $moreNavs )
-#set ( $navs = {"home" : ["Recipe Book", "/"], "create" : ["New Recipe", "/recipe/new"]} )
+#macro ( navbar $active $recipeId )
+#set ( $navs = {
+"home" : ["Recipe Book", "/", false], 
+"create" : ["New Recipe", "/recipe/new", false],
+"edit" : ["Edit Recipe", "/recipe/$recipeId/edit", true],
+"delete" : ["Delete Recipe", "#", true]
+} )
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="#">Recipes</a>
+  <a class="navbar-brand" href="/">Recipes</a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -31,12 +36,11 @@
    <ul class="navbar-nav mr-auto">
      #foreach ( $nav in $navs.entrySet() )
      <li class="nav-item#if($nav.key == $active) active#end">
+     	#if(!$recipeId && $nav.value[2])
+     	<a class="nav-link disabled">$nav.value[0]</a>
+     	#else
      	<a class="nav-link" href="$nav.value[1]">$nav.value[0]</a>
-     </li>
-     #end
-     #foreach ( $nav in $moreNavs.entrySet() )
-     <li class="nav-item#if($nav.key == $active) active#end">
-     	<a class="nav-link" href="$nav.value[1]">$nav.value[0]</a>
+     	#end
      </li>
      #end
    	<!--
