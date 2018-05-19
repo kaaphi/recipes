@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,7 +41,9 @@ public class JsonRecipeRepository implements RecipeRepository {
   public Set<RecipeBookEntry> getAll() {
     if(Files.exists(store)) {
       try(Reader in = Files.newBufferedReader(store, UTF8)) {
-        return gson.fromJson(in, new TypeToken<LinkedHashSet<RecipeBookEntry>>(){}.getType());
+        Set<RecipeBookEntry> book = new TreeSet<>((a,b) -> a.getRecipe().getTitle().compareTo(b.getRecipe().getTitle()));
+        book.addAll(gson.fromJson(in, new TypeToken<LinkedHashSet<RecipeBookEntry>>(){}.getType()));
+        return book;
       } catch (IOException e) {
         throw new RecipeRepositoryException(e);
       }
