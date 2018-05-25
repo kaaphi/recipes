@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -50,10 +51,7 @@ public class EnexToRecipe {
     
     IngredientParser ingredientParser = new IngredientParser();
     
-    List<String> sources = Optional.ofNullable(note.getNoteAttributes())
-    .map(NoteAttributes::getSourceUrl)
-    .map(url -> Arrays.asList(url))
-    .orElse(Collections.emptyList());
+    List<String> sources = getSources(note);
     
     Recipe recipe = new Recipe(
         note.getTitle(), 
@@ -62,13 +60,39 @@ public class EnexToRecipe {
         sources
         );
     
-    Instant created = Optional.ofNullable(note.getCreated())
-        .map(txt -> ZonedDateTime.parse(txt, TIME_FORMATTER).toInstant())
-        .orElseGet(Instant::now);
-    Instant updated = Optional.ofNullable(note.getUpdated())
-        .map(txt -> ZonedDateTime.parse(txt, TIME_FORMATTER).toInstant())
-        .orElse(null);
+    Instant created = parseInstant(note.getCreated(), Instant::now);
+    Instant updated = parseInstant(note.getUpdated(), () -> null);
+   
+    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated);
+  }
 
+  private List<String> getSources(Note note) {
+    List<String> sources = Optional.ofNullable(note.getNoteAttributes())
+        .map(NoteAttributes::getSourceUrl)
+        .map(url -> Arrays.asList(url))
+        .orElse(Collections.emptyList());
+    return sources;
+  }
+  
+  private Instant parseInstant(String enexTimestamp, Supplier<Instant> supplyDefault) {
+    return Optional.ofNullable(enexTimestamp)
+    .map(txt -> ZonedDateTime.parse(txt, TIME_FORMATTER).toInstant())
+    .orElseGet(supplyDefault);
+  }
+  
+  public RecipeBookEntry processFailedNote(Note note) {
+    List<String> sources = getSources(note);
+    
+    Recipe recipe = new Recipe(
+        note.getTitle(), 
+        Collections.emptyList(),
+        "",
+        sources
+        );
+    
+    Instant created = parseInstant(note.getCreated(), Instant::now);
+    Instant updated = parseInstant(note.getUpdated(), () -> null);
+   
     return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated);
   }
   
@@ -92,7 +116,7 @@ public class EnexToRecipe {
             return processNote(note);
           } catch (SAXException | ParserConfigurationException | IOException e) {
             failureHandler.accept(note, e);     
-            return null;
+            return processFailedNote(note);
           }
         })
         .filter(Objects::nonNull)
