@@ -24,6 +24,22 @@
   $method
   </div></div>
   
+  #if ( !$recipe.recipe.sources.isEmpty() )
+  <div class="row"><div class="col">
+  <a data-toggle="collapse" href="#sources" aria-expanded="false" aria-controls="sources">Sources</a>
+  <ul class="collapse multi-collapse" id="sources">
+  #foreach( $source in $recipe.recipe.sources )
+  <li>
+  #if ( $source.startsWith("http") )
+  <a href="$source">$source</a>
+  #else
+  $source
+  #end
+  </li>
+  #end
+  </ul>
+  </div></div>
+  #end
   
   </body>
 </html>

@@ -2,6 +2,7 @@ package com.kaaphi.recipe.enex;
 
 import com.evernote.enex.EnExport;
 import com.evernote.enex.Note;
+import com.evernote.enex.NoteAttributes;
 import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.txtformat.IngredientParser;
@@ -12,6 +13,8 @@ import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,10 +50,17 @@ public class EnexToRecipe {
     
     IngredientParser ingredientParser = new IngredientParser();
     
+    List<String> sources = Optional.ofNullable(note.getNoteAttributes())
+    .map(NoteAttributes::getSourceUrl)
+    .map(url -> Arrays.asList(url))
+    .orElse(Collections.emptyList());
+    
     Recipe recipe = new Recipe(
         note.getTitle(), 
         handler.getIngredients().stream().map(ingredientParser::fromString).collect(Collectors.toList()),
-        handler.getMethod());
+        handler.getMethod(),
+        sources
+        );
     
     Instant created = Optional.ofNullable(note.getCreated())
         .map(txt -> ZonedDateTime.parse(txt, TIME_FORMATTER).toInstant())

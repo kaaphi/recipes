@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,13 +22,18 @@ public class TextFormat {
     Iterator<String> it = in.lines().iterator();
     String title = it.next();
     
+    
+    
     List<Ingredient> ingredients = nextChunk(it)
     .map(ingredientParser::fromString)
     .collect(Collectors.toList());
     
-    String method = nextChunk(it).collect(Collectors.joining(NEWLINE));
+    String method = nextChunks(it, line -> "SOURCES".equals(line)).collect(Collectors.joining(NEWLINE));
     
-    return new Recipe(title, ingredients, method);
+    List<String> sources = nextChunk(it)
+        .collect(Collectors.toList());
+        
+    return new Recipe(title, ingredients, method, sources);
   }
   
   public Recipe fromText(String text) {
@@ -50,7 +56,14 @@ public class TextFormat {
     }
     out.append(NEWLINE)
     .append(recipe.getMethod())
-    .append(NEWLINE);
+    .append(NEWLINE).append(NEWLINE);
+    
+    if(!recipe.getSources().isEmpty()) {
+      out.append("SOURCES").append(NEWLINE);
+      for(String source : recipe.getSources()) {
+        out.append(source).append(NEWLINE);
+      }
+    }
   }
   
   public String toTextString(Recipe recipe) {
@@ -64,14 +77,19 @@ public class TextFormat {
   }
   
   private static Stream<String> nextChunk(Iterator<String> it) {
+    return nextChunks(it, String::isEmpty);
+  }
+  
+  
+  private static Stream<String> nextChunks(Iterator<String> it, Predicate<String> until) {
     String line = null;
     while(it.hasNext() && (line = it.next()).isEmpty());
     Stream.Builder<String> builder = Stream.builder();
     if(line != null) {
 
       builder.add(line);
-      while(it.hasNext() && !(line = it.next()).isEmpty()) {
-        builder.add(line);
+      while(it.hasNext() && !(until.test(line = it.next()))) {
+        builder.add(line);  
       }
     }
     return builder.build();
