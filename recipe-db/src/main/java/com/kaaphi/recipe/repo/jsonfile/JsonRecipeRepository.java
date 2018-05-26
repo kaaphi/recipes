@@ -6,14 +6,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.repo.RecipeRepository;
-import com.kaaphi.recipe.repo.RecipeRepositoryException;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,31 +17,26 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class JsonRecipeRepository implements RecipeRepository {
-  private static final Charset UTF8 = Charset.forName("UTF-8");
-
-  private final Path store;
+public class JsonRecipeRepository extends AbstractFileRepo implements RecipeRepository {
   private final Gson gson;
   
   @Inject
   public JsonRecipeRepository(@Named("jsonRepoPath") String store, @Named("repoGson") Gson gson) {
-    this.store = Paths.get(store);
+    super(store, "recipes.json");
     this.gson = gson;
   }
     
   @Override
   public Set<RecipeBookEntry> getAll() {
-    if(Files.exists(store)) {
-      try(Reader in = Files.newBufferedReader(store, UTF8)) {
+    return read(in -> {
+      if(in.isPresent()) {
         Set<RecipeBookEntry> book = new TreeSet<>((a,b) -> a.getRecipe().getTitle().compareTo(b.getRecipe().getTitle()));
-        book.addAll(gson.fromJson(in, new TypeToken<LinkedHashSet<RecipeBookEntry>>(){}.getType()));
-        return book;
-      } catch (IOException e) {
-        throw new RecipeRepositoryException(e);
-      }
-    } else {
-      return Collections.emptySet();
-    }
+        book.addAll(gson.fromJson(in.get(), new TypeToken<LinkedHashSet<RecipeBookEntry>>(){}.getType()));
+        return book;        
+      } else {
+        return Collections.emptySet();
+      }      
+    });
   }
   
   @Override
@@ -75,11 +62,7 @@ public class JsonRecipeRepository implements RecipeRepository {
   }
   
   private void writeList(Collection<RecipeBookEntry> all) {
-    try(BufferedWriter out = Files.newBufferedWriter(store, UTF8)) {
-      gson.toJson(all, new TypeToken<Collection<RecipeBookEntry>>(){}.getType(), out);
-    } catch (IOException e) {
-      throw new RecipeRepositoryException(e);
-    }
+    write(out -> gson.toJson(all, new TypeToken<Collection<RecipeBookEntry>>(){}.getType(), out));
   }
   
   private static Map<UUID, RecipeBookEntry> toMap(Set<RecipeBookEntry> recipes) {

@@ -19,9 +19,10 @@ public class RecipeApp {
   private final Javalin app;
     
   @Inject
-  public RecipeApp(Javalin app, RecipeController controller) {
+  public RecipeApp(Javalin app, RecipeController controller, LoginController loginController) {
     this.app = app;
     
+    app.before(loginController::validateLoggedIn);
     
     app.routes(() -> {
       path(Path.RECIPE_API, () -> {

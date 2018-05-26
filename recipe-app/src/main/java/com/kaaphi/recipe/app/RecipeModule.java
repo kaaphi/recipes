@@ -15,6 +15,8 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.jsonfile.JsonRecipeRepository;
+import com.kaaphi.recipe.repo.jsonfile.UserFileRepository;
+import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.velocity.VelocitySLF4JLogChute;
 import io.javalin.Javalin;
 import io.javalin.translator.template.JavalinVelocityPlugin;
@@ -34,6 +36,7 @@ public class RecipeModule extends AbstractModule {
     Names.bindProperties(binder(), loadProperties());
     
     bind(RecipeRepository.class).to(JsonRecipeRepository.class);
+    bind(UserRepository.class).to(UserFileRepository.class);
   }
   
   @Provides
@@ -92,8 +95,7 @@ public class RecipeModule extends AbstractModule {
     @Override
     public JsonElement serialize(Instant src, Type typeOfSrc, JsonSerializationContext context) {
       return new JsonPrimitive(src.toEpochMilli());
-    }
-    
+    }    
   }
   
 }
