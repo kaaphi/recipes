@@ -1,5 +1,6 @@
 package com.kaaphi.recipe.users;
 
+import com.kaaphi.recipe.users.auth.AuthenticationMethod;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

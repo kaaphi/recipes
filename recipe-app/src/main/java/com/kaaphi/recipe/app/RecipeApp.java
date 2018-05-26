@@ -40,6 +40,11 @@ public class RecipeApp {
         get(controller::renderRecipeList);
       });
       
+      path("/login", () -> {
+        get(loginController::renderLogin);
+        post(loginController::handlePost);
+      });
+      
       path("recipe/new", () -> {
         get(controller::renderNewRecipe);
       });

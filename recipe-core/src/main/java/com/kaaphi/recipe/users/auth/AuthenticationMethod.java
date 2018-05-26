@@ -1,5 +1,7 @@
-package com.kaaphi.recipe.users;
+package com.kaaphi.recipe.users.auth;
 
+import com.kaaphi.recipe.users.User;
+import com.kaaphi.recipe.users.UserRepository;
 import io.javalin.Context;
 
 public interface AuthenticationMethod {

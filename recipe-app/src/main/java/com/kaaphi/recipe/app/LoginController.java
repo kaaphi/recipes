@@ -2,18 +2,21 @@ package com.kaaphi.recipe.app;
 
 import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
 import com.google.inject.Inject;
-import com.kaaphi.recipe.users.AuthenticationMethod;
-import com.kaaphi.recipe.users.AuthenticationMethods;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
+import com.kaaphi.recipe.users.auth.AuthenticationMethod;
+import com.kaaphi.recipe.users.auth.AuthenticationMethods;
 import com.kaaphi.recipe.users.auth.BasicAuthentication;
-import com.kaaphi.recipe.users.auth.PasswordAuthentication;
 import com.kaaphi.recipe.users.auth.PasswordPostAuthentication;
 import io.javalin.Context;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoginController {
+  private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
   private UserRepository repo;
   
@@ -22,13 +25,20 @@ public class LoginController {
     this.repo = repo;
   }
   
+  public void renderLogin(Context ctx) {
+    ctx.renderVelocity("/login.html", new HashMap<>());
+  }
+  
   public void validateLoggedIn(Context ctx) throws IOException {
     if(ctx.sessionAttribute(CURRENT_USER) == null) {
+      log.trace("No logged in user. Path {} Matched Path {}", ctx.path(), ctx.matchedPath());
       if(ctx.basicAuthCredentials() != null) {
-        doAuth(new BasicAuthentication(), ctx);
-      } else {      
-        ctx.response().addHeader("WWW-Authenticate", "Basic realm=\"User Visible Realm\"");
-        ctx.response().sendError(401);
+        log.trace("Doing basic auth.");
+        if(!doAuth(new BasicAuthentication(), ctx)) {
+          ctx.response().sendError(401);
+        }
+      } else if(!"/login".equals(ctx.path())) {      
+        ctx.redirect("/login");
       }
     }
   }
@@ -38,16 +48,21 @@ public class LoginController {
         .map(AuthenticationMethods::getAuthenticationMethod)
         .orElse(new PasswordPostAuthentication());
     
-    doAuth(authType, ctx);
+    if(doAuth(authType, ctx)) {
+      ctx.redirect("/", 303);
+    } else {
+      ctx.response().sendError(401);
+    }
   }
   
-  private void doAuth(AuthenticationMethod method, Context ctx) throws IOException {
+  private boolean doAuth(AuthenticationMethod method, Context ctx) throws IOException {
     User user = method.authenticate(ctx, repo);
     
     if(user == null) {
-      ctx.response().sendError(401);
+      return false;
     } else {
       ctx.sessionAttribute(CURRENT_USER, user);
+      return true;
     }
   }
 

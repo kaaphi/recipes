@@ -1,6 +1,5 @@
 package com.kaaphi.recipe.users.auth;
 
-import com.kaaphi.recipe.users.AbstractAuthenticationMethod;
 import io.javalin.Context;
 import org.mindrot.jbcrypt.BCrypt;
 

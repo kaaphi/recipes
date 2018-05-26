@@ -1,4 +1,4 @@
-package com.kaaphi.recipe.users;
+package com.kaaphi.recipe.users.auth;
 
 import java.util.ServiceLoader;
 import java.util.stream.StreamSupport;

@@ -150,7 +150,7 @@ public class RecipeController {
     try {
       return UUID.fromString(id);
     } catch (NumberFormatException e) {
-      log.debug("No recipe for id <%s>", id);
+      log.debug("No recipe for id <{}>", id);
       throw new HaltException(404, "Not found");
     }
   }
