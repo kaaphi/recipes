@@ -54,7 +54,11 @@ public class LoginController {
     }
   }
   
-  
+  public void handleLogout(Context ctx) {
+    ctx.request().getSession().removeAttribute(CURRENT_USER);
+    longTermAuthController.removeExisingSession(ctx);
+    ctx.redirect("/login");
+  }
   
   public void handlePost(Context ctx) throws IOException {
     AuthenticationMethod authType = Optional.ofNullable(ctx.formParam("method"))

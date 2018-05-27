@@ -10,6 +10,10 @@ public abstract class AbstractAuthenticationMethod implements AuthenticationMeth
   public User authenticate(Context ctx, UserRepository repo) {
     User user = repo.getUserByUsername(getUsername(ctx));
     
+    if(user == null) {
+      return null;
+    }
+    
     String authDetails = user.getAuthDetails(this);
     
     if(authDetails != null && authenticate(authDetails, ctx)) {

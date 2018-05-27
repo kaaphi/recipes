@@ -45,6 +45,10 @@ public class RecipeApp {
         post(loginController::handlePost);
       });
       
+      path("/logout", () -> {
+          get(loginController::handleLogout);
+      });
+      
       path("recipe/new", () -> {
         get(controller::renderNewRecipe);
       });

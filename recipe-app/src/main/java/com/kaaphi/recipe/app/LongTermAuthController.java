@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 public class LongTermAuthController {
   private static final Logger log = LoggerFactory.getLogger(LongTermAuthController.class);
   
+  private static final String REMEMBER_TOKEN = "rememberToken";
+  
   private UserRepository userRepo;
   private LongTermAuthRepository repo;
   private TemporalAmount expiration;
@@ -32,7 +34,7 @@ public class LongTermAuthController {
   }
   
   public User validateLongTermAuth(Context ctx) {
-    String tokenString = ctx.cookie("rememberToken");
+    String tokenString = ctx.cookie(REMEMBER_TOKEN);
     log.trace("Found long term auth token {}", tokenString);
     if(tokenString != null) {
       LongTermAuthTokenClient clientToken = LongTermAuthPair.parseClientToken(tokenString);
@@ -60,9 +62,18 @@ public class LongTermAuthController {
     writeNewToken(LongTermAuthPair.generatePair(user.getUsername(), Instant.now().plus(expiration)), ctx);
   }
   
+  public void removeExisingSession(Context ctx) {
+    String tokenString = ctx.cookie(REMEMBER_TOKEN);
+    if(tokenString != null) {
+      LongTermAuthTokenClient clientToken = LongTermAuthPair.parseClientToken(tokenString);
+      repo.deleteServerToken(clientToken.getSelector());
+      ctx.cookieMap().remove(REMEMBER_TOKEN);
+    }
+  }
+  
   private void writeNewToken(LongTermAuthPair pair, Context ctx) {
     repo.saveServerToken(pair.getServer());
-    ctx.cookie(CookieBuilder.cookieBuilder("rememberToken", pair.getClient().toString())
+    ctx.cookie(CookieBuilder.cookieBuilder(REMEMBER_TOKEN, pair.getClient().toString())
         .maxAge(Math.toIntExact(Instant.now().until(pair.getServer().getExpires(), ChronoUnit.SECONDS)))
         .httpOnly(true)
         //TODO .secure(true)
