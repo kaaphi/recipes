@@ -17,6 +17,8 @@ import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.jsonfile.JsonRecipeRepository;
 import com.kaaphi.recipe.repo.jsonfile.UserFileRepository;
 import com.kaaphi.recipe.users.UserRepository;
+import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
+import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
 import com.kaaphi.velocity.VelocitySLF4JLogChute;
 import io.javalin.Javalin;
 import io.javalin.translator.template.JavalinVelocityPlugin;
@@ -37,6 +39,7 @@ public class RecipeModule extends AbstractModule {
     
     bind(RecipeRepository.class).to(JsonRecipeRepository.class);
     bind(UserRepository.class).to(UserFileRepository.class);
+    bind(LongTermAuthRepository.class).to(MemoryLongTermAuthRepo.class);
   }
   
   @Provides

@@ -19,10 +19,12 @@ public class LoginController {
   private static final Logger log = LoggerFactory.getLogger(LoginController.class);
 
   private UserRepository repo;
+  private LongTermAuthController longTermAuthController;
   
   @Inject
-  public LoginController(UserRepository repo) {
+  public LoginController(UserRepository repo, LongTermAuthController longTermAuthController) {
     this.repo = repo;
+    this.longTermAuthController = longTermAuthController;
   }
   
   public void renderLogin(Context ctx) {
@@ -32,7 +34,11 @@ public class LoginController {
   public void validateLoggedIn(Context ctx) throws IOException {
     if(ctx.sessionAttribute(CURRENT_USER) == null) {
       log.trace("No logged in user. Path {} Matched Path {}", ctx.path(), ctx.matchedPath());
-      if(ctx.basicAuthCredentials() != null) {
+      //check for long-term auth token
+      User user = longTermAuthController.validateLongTermAuth(ctx);
+      if(user != null) {
+        ctx.sessionAttribute(CURRENT_USER, user);
+      } else if(ctx.basicAuthCredentials() != null) {
         log.trace("Doing basic auth.");
         if(!doAuth(new BasicAuthentication(), ctx)) {
           ctx.response().sendError(401);
@@ -41,7 +47,14 @@ public class LoginController {
         ctx.redirect("/login");
       }
     }
+    
+    if(ctx.sessionAttribute(CURRENT_USER) != null && "/login".equals(ctx.path())) {
+      //logged in now, redirect to main page
+      ctx.redirect("/");
+    }
   }
+  
+  
   
   public void handlePost(Context ctx) throws IOException {
     AuthenticationMethod authType = Optional.ofNullable(ctx.formParam("method"))
@@ -62,6 +75,7 @@ public class LoginController {
       return false;
     } else {
       ctx.sessionAttribute(CURRENT_USER, user);
+      longTermAuthController.saveNewSession(user, ctx);
       return true;
     }
   }
