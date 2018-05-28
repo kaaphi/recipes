@@ -8,16 +8,9 @@ import java.util.Base64;
 import java.util.Optional;
 
 public class LongTermAuthPair {
-  private static final SecureRandom RANDOM;
+  private static final SecureRandom RANDOM = new SecureRandom();
   private static final Base64.Encoder ENCODER = Base64.getEncoder();
   private static final Base64.Decoder DECODER = Base64.getDecoder();
-  static {
-    try {
-      RANDOM = SecureRandom.getInstanceStrong();
-    } catch (NoSuchAlgorithmException e) {
-      throw new Error(e);
-    }
-  }
   
   private final LongTermAuthTokenClient client;
   private final LongTermAuthTokenServer server;
