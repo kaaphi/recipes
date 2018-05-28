@@ -32,14 +32,16 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Properties;
 import org.apache.velocity.app.VelocityEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RecipeModule extends AbstractModule {
+  private static final Logger log = LoggerFactory.getLogger(RecipeModule.class);
 
   @Override
   protected void configure() {
     Names.bindProperties(binder(), loadProperties());
     
-    //bind(RecipeRepository.class).to(JsonRecipeRepository.class);
     bind(UserRepository.class).to(UserFileRepository.class);
     bind(LongTermAuthRepository.class).to(MemoryLongTermAuthRepo.class);
     
@@ -60,16 +62,14 @@ public class RecipeModule extends AbstractModule {
   @Provides
   VelocityEngine provideVelocityEngine() {
     VelocityEngine velocityEngine = new VelocityEngine();
-    //velocityEngine.setProperty("resource.loader", "class");
-    //velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    velocityEngine.setProperty("resource.loader", "file");
-    velocityEngine.setProperty("velocimacro.library.autoreload", "true");
-    velocityEngine.setProperty("file.resource.loader.cache", "false");
-    velocityEngine.setProperty("file.resource.loader.path", "./src/main/resources");
-    //velocityEngine.setProperty("velocimacro.permissions.allow.inline.to.replace.global", "true");
-    velocityEngine.setProperty("runtime.log.logsystem", new VelocitySLF4JLogChute());
-    
+    configureVelocityEngine(velocityEngine);    
     return velocityEngine;
+  }
+  
+  protected void configureVelocityEngine(VelocityEngine velocityEngine) {
+    velocityEngine.setProperty("resource.loader", "class");
+    velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+    velocityEngine.setProperty("runtime.log.logsystem", new VelocitySLF4JLogChute());
   }
   
   @Provides
@@ -88,14 +88,35 @@ public class RecipeModule extends AbstractModule {
   
   private Properties loadProperties() {
     Properties props = new Properties();
-    try(InputStream in = Files.newInputStream(Paths.get("./localConfig/config.properties"))) {
+
+    try(InputStream in = findPropertiesInputStream()) {
       props.load(in);
     } catch (IOException e) {
       throw new Error(e);
     }
     return props;
   }
-  
+
+  private InputStream findPropertiesInputStream() throws IOException {
+    //First try to find path from system properties
+    String path = System.getProperty("config");
+    if(path != null) {
+      log.info("Loading properties from system property path: {}", path);;
+      return Files.newInputStream(Paths.get(path));
+    }
+    
+    //next try class path loading
+    InputStream classpathStream = getClass().getClassLoader().getResourceAsStream("config.properties");
+    if(classpathStream != null) {
+      log.info("Loading config.properties from classpath");
+      return classpathStream;
+    }
+    
+    log.error("No configuration properties found!");
+    
+    throw new Error("No configuration properties found!");
+  }
+
   private static class InstantAdapter implements JsonSerializer<Instant>,JsonDeserializer<Instant> {
     @Override
     public Instant deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)

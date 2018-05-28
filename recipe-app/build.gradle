@@ -1,3 +1,9 @@
+apply plugin: 'application'
+
+mainClassName = "com.kaaphi.recipe.app.RecipeApp"
+
+applicationDefaultJvmArgs = ["-Dconfig=/data/config.properties"]
+
 dependencies {
    	compile project(':recipe-core')
    	compile project(':recipe-enex')
