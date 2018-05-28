@@ -1,6 +1,5 @@
 dependencies {
    	compile project(':recipe-core')
-   	compile project(':recipe-db')
    	compile project(':recipe-enex')
    	
    	compile 'io.javalin:javalin:1.6.0'   	
