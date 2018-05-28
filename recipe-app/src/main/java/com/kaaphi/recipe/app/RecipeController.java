@@ -1,5 +1,6 @@
 package com.kaaphi.recipe.app;
 
+import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
 import com.github.rjeschke.txtmark.Processor;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -10,6 +11,8 @@ import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.txtformat.TextFormat;
+import com.kaaphi.recipe.users.RecipeRepositoryFactory;
+import com.kaaphi.recipe.users.User;
 import io.javalin.Context;
 import io.javalin.HaltException;
 import java.util.Collection;
@@ -26,13 +29,13 @@ import org.slf4j.LoggerFactory;
 public class RecipeController {
   private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
   
-  private final RecipeRepository repo;
+  private final RecipeRepositoryFactory recipeRepoFactory;
   private final Gson gson;
   private final TextFormat txtFormat;
   
   @Inject
-  public RecipeController(Gson gson, RecipeRepository repo, TextFormat txtFormat) {
-    this.repo = repo;
+  public RecipeController(Gson gson, RecipeRepositoryFactory recipeRepoFactory, TextFormat txtFormat) {
+    this.recipeRepoFactory = recipeRepoFactory;
     this.gson = gson;
     this.txtFormat = txtFormat;
   }
@@ -54,11 +57,11 @@ public class RecipeController {
   }
   
   public Map<String, Object> getRecipeListModel(Context ctx) {
-    return model(b -> b.put("allRecipes", repo.getAll()));
+    return model(b -> b.put("allRecipes", recipeRepo(ctx).getAll()));
   }
   
   public Map<String, Object> getRecipeEditModel(Context ctx) {
-    RecipeBookEntry r = repo.get(parseUUID(ctx));
+    RecipeBookEntry r = recipeRepo(ctx).get(parseUUID(ctx));
     
     return model(b -> b
         .put("recipe", r)
@@ -67,7 +70,7 @@ public class RecipeController {
   }
   
   public Map<String, Object> getRecipeModel(Context ctx) {
-    RecipeBookEntry r = repo.get(parseUUID(ctx));
+    RecipeBookEntry r = recipeRepo(ctx).get(parseUUID(ctx));
     
     List<String> ingredients = r.getRecipe().getIngredients().stream()
         .map(i -> i.getQuantity().isPresent() ? String.format("%s %s", i.getQuantity().get(), i.getName()) : i.getName())
@@ -87,7 +90,7 @@ public class RecipeController {
   }
   
   public void readAllRecipes(Context ctx) {
-    Set<RecipeBookEntry> recipes = repo.getAll();
+    Set<RecipeBookEntry> recipes = recipeRepo(ctx).getAll();
     
     StringBuilder sb = new StringBuilder();
     gson.toJson(recipes, new TypeToken<Collection<RecipeBookEntry>>(){}.getType(), sb);
@@ -98,7 +101,7 @@ public class RecipeController {
   public void readRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
     
-    RecipeBookEntry recipe = repo.get(uuid);
+    RecipeBookEntry recipe = recipeRepo(ctx).get(uuid);
     
     if(recipe != null) {
       ctx.result(gson.toJson(recipe));
@@ -112,7 +115,7 @@ public class RecipeController {
     
     Recipe recipe = parseRecipe(ctx);
         
-    repo.save(id, recipe);
+    recipeRepo(ctx).save(id, recipe);
   }
   
   private Recipe parseRecipe(Context ctx) {
@@ -126,20 +129,33 @@ public class RecipeController {
   public void createRecipe(Context ctx) {
     Recipe recipe = parseRecipe(ctx);
     
-    repo.save(UUID.randomUUID(), recipe);
+    recipeRepo(ctx).save(UUID.randomUUID(), recipe);
     
     ctx.result(gson.toJson(recipe));
   }
   
   public void deleteRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
-    repo.delete(uuid);
+    recipeRepo(ctx).delete(uuid);
   } 
   
   public void render(Context ctx) {
     UUID uuid = parseUUID(ctx);
-    RecipeBookEntry recipe = repo.get(uuid);
+    RecipeBookEntry recipe = recipeRepo(ctx).get(uuid);
     ctx.result(RecipeMarkdownProcessor.process(recipe.getRecipe()));
+  }
+  
+  private RecipeRepository recipeRepo(Context ctx) {
+    return recipeRepoFactory.createRepository(getUser(ctx));
+  }
+  
+  private static User getUser(Context ctx) {
+    User user = ctx.sessionAttribute(CURRENT_USER);
+    if(user == null) {
+      throw new HaltException(401);
+    } else {
+      return user;
+    }
   }
   
   private static UUID parseUUID(Context ctx) {

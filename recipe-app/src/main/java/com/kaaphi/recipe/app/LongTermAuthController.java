@@ -52,6 +52,9 @@ public class LongTermAuthController {
           log.trace("Server token invalid or expired!");
           repo.deleteServerToken(serverToken);
         }
+      } else {
+        log.trace("No matching server token, will clear cookie!");
+        clearCookie(ctx);
       }
     }
 
@@ -67,8 +70,16 @@ public class LongTermAuthController {
     if(tokenString != null) {
       LongTermAuthTokenClient clientToken = LongTermAuthPair.parseClientToken(tokenString);
       repo.deleteServerToken(clientToken.getSelector());
-      ctx.cookieMap().remove(REMEMBER_TOKEN);
+      clearCookie(ctx);
     }
+  }
+  
+  private void clearCookie(Context ctx) {
+    ctx.cookie(CookieBuilder.cookieBuilder(REMEMBER_TOKEN, "")
+        .httpOnly(true)
+        //TODO secure(true)
+        .maxAge(0)
+        );
   }
   
   private void writeNewToken(LongTermAuthPair pair, Context ctx) {

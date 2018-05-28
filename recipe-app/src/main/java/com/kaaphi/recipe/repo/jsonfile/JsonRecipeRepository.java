@@ -3,9 +3,11 @@ package com.kaaphi.recipe.repo.jsonfile;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.users.User;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -21,8 +23,8 @@ public class JsonRecipeRepository extends AbstractFileRepo implements RecipeRepo
   private final Gson gson;
   
   @Inject
-  public JsonRecipeRepository(@Named("jsonRepoPath") String store, @Named("repoGson") Gson gson) {
-    super(store, "recipes.json");
+  public JsonRecipeRepository(@Named("jsonRepoPath") String store, @Named("repoGson") Gson gson, @Assisted User user) {
+    super(store, "recipes_" + user.getUsername() + ".json");
     this.gson = gson;
   }
     

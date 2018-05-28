@@ -7,12 +7,15 @@ import com.google.inject.name.Named;
 import com.kaaphi.recipe.app.RecipeModule;
 import com.kaaphi.recipe.enex.EnexToRecipe;
 import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.users.RecipeRepositoryFactory;
+import com.kaaphi.recipe.users.User;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Set;
 import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
@@ -26,8 +29,8 @@ public class BuildRepoFromEnex {
   private File source;
   
   @Inject
-  public BuildRepoFromEnex(@Named("enexSourcePath") String enexPath, RecipeRepository repo) {
-    this.repo = repo;
+  public BuildRepoFromEnex(@Named("enexSourcePath") String enexPath, RecipeRepositoryFactory repoFactory) {
+    this.repo = repoFactory.createRepository(new User("kaaphi", Collections.emptyMap()));
     this.source = new File(enexPath);
   }
   

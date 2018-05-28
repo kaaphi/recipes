@@ -11,11 +11,13 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.jsonfile.JsonRecipeRepository;
 import com.kaaphi.recipe.repo.jsonfile.UserFileRepository;
+import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
@@ -37,15 +39,21 @@ public class RecipeModule extends AbstractModule {
   protected void configure() {
     Names.bindProperties(binder(), loadProperties());
     
-    bind(RecipeRepository.class).to(JsonRecipeRepository.class);
+    //bind(RecipeRepository.class).to(JsonRecipeRepository.class);
     bind(UserRepository.class).to(UserFileRepository.class);
     bind(LongTermAuthRepository.class).to(MemoryLongTermAuthRepo.class);
+    
+    install(new FactoryModuleBuilder()
+        .implement(RecipeRepository.class, JsonRecipeRepository.class)
+        .build(RecipeRepositoryFactory.class)
+        );
   }
   
   @Provides
   Javalin provideJavalin(VelocityEngine engine) {
     JavalinVelocityPlugin.configure(engine);    
     return Javalin.create()
+        .enableStandardRequestLogging()
         .port(7000);        
   }
   
