@@ -129,9 +129,9 @@ public class RecipeController {
   public void createRecipe(Context ctx) {
     Recipe recipe = parseRecipe(ctx);
     
-    recipeRepo(ctx).save(UUID.randomUUID(), recipe);
+    RecipeBookEntry entry = recipeRepo(ctx).save(UUID.randomUUID(), recipe);
     
-    ctx.result(gson.toJson(recipe));
+    ctx.result(gson.toJson(entry));
   }
   
   public void deleteRecipe(Context ctx) {
