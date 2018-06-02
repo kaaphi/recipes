@@ -1,0 +1,1 @@
+task buildDb(type : com.kaaphi.db.BuildDbScripts)

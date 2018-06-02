@@ -15,12 +15,9 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.kaaphi.recipe.repo.RecipeRepository;
-import com.kaaphi.recipe.repo.jsonfile.JsonRecipeRepository;
-import com.kaaphi.recipe.repo.jsonfile.UserFileRepository;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
-import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
 import com.kaaphi.velocity.VelocitySLF4JLogChute;
 import io.javalin.Javalin;
 import io.javalin.translator.template.JavalinVelocityPlugin;
@@ -31,26 +28,54 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Properties;
+import javax.sql.DataSource;
 import org.apache.velocity.app.VelocityEngine;
+import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RecipeModule extends AbstractModule {
+public abstract class RecipeModule extends AbstractModule {
   private static final Logger log = LoggerFactory.getLogger(RecipeModule.class);
+
+  private final Class<? extends UserRepository> userRepoClass;
+  private final Class<? extends LongTermAuthRepository> longTermAuthRepoClass;
+  private final Class<? extends RecipeRepository> recipeRepoClass;
+    
+  public RecipeModule(Class<? extends UserRepository> userRepoClass,
+      Class<? extends LongTermAuthRepository> longTermAuthRepoClass,
+      Class<? extends RecipeRepository> recipeRepoClass) {
+    super();
+    this.userRepoClass = userRepoClass;
+    this.longTermAuthRepoClass = longTermAuthRepoClass;
+    this.recipeRepoClass = recipeRepoClass;
+  }
 
   @Override
   protected void configure() {
     Names.bindProperties(binder(), loadProperties());
     
-    bind(UserRepository.class).to(UserFileRepository.class);
-    bind(LongTermAuthRepository.class).to(MemoryLongTermAuthRepo.class);
+    bind(UserRepository.class).to(userRepoClass);
+    bind(LongTermAuthRepository.class).to(longTermAuthRepoClass);
     
     install(new FactoryModuleBuilder()
-        .implement(RecipeRepository.class, JsonRecipeRepository.class)
+        .implement(RecipeRepository.class, recipeRepoClass)
         .build(RecipeRepositoryFactory.class)
         );
   }
   
+  
+  @Provides
+  DataSource provideDataSource(@Named("sql.url") String connectionUrl, @Named("sql.user") String user, @Named("sql.password") String password) {
+    //TODO pooling
+    PGSimpleDataSource ds = new PGSimpleDataSource();
+    
+    ds.setURL(connectionUrl);
+    ds.setUser(user);
+    ds.setPassword(password);
+        
+    return ds;
+  }
+    
   @Provides
   Javalin provideJavalin(VelocityEngine engine) {
     JavalinVelocityPlugin.configure(engine);    
@@ -62,15 +87,12 @@ public class RecipeModule extends AbstractModule {
   @Provides
   VelocityEngine provideVelocityEngine() {
     VelocityEngine velocityEngine = new VelocityEngine();
+    velocityEngine.setProperty("runtime.log.logsystem", new VelocitySLF4JLogChute());
     configureVelocityEngine(velocityEngine);    
     return velocityEngine;
   }
   
-  protected void configureVelocityEngine(VelocityEngine velocityEngine) {
-    velocityEngine.setProperty("resource.loader", "class");
-    velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    velocityEngine.setProperty("runtime.log.logsystem", new VelocitySLF4JLogChute());
-  }
+  protected abstract void configureVelocityEngine(VelocityEngine velocityEngine);
   
   @Provides
   Gson provideGson() {
