@@ -71,7 +71,7 @@ public class RecipeApp {
   }
   
   public static void main(String[] args) {
-    Injector injector = Guice.createInjector(new RecipeModule());
+    Injector injector = Guice.createInjector(new ProductionRecipeModule());
     
     RecipeApp app = injector.getInstance(RecipeApp.class);
     

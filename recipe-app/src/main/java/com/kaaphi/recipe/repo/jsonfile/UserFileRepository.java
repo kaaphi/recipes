@@ -49,12 +49,13 @@ public class UserFileRepository extends AbstractFileRepo implements UserReposito
   }
 
   @Override
-  public void addUser(User user) {
+  public User addUser(User user) {
     if(cache.containsKey(user.getUsername())) {
       throw new IllegalStateException("User already exists!");
     } else {
       cache.put(user.getUsername(), user);
       write();
+      return user;
     }
   }
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,10 +23,11 @@ public class BuildDbScripts extends DefaultTask {
   @TaskAction
   public void buildScripts() throws IOException {
     Path scriptsDir = getProject().file("scripts").toPath();
+    Path patchesDir = scriptsDir.resolve("patches");
   
     GraphBuilder<String, Boolean, ? extends DirectedAcyclicGraph<String, Boolean>> builder = DirectedAcyclicGraph.createBuilder(() -> true);
     
-    Files.list(scriptsDir)
+    Files.list(patchesDir)
     .forEach(path -> parseDependencies(path, builder));
     getLogger().info(getPath());
     
@@ -34,8 +36,12 @@ public class BuildDbScripts extends DefaultTask {
             
     Iterable<String> iterable = () -> new TopologicalOrderIterator<>(graph);
     
-    List<Path> scripts = Stream.concat(Stream.of(getProject().file("versioning").toPath().resolve("install.versioning.sql")),
-        StreamSupport.stream(iterable.spliterator(), false).map(patch -> scriptsDir.resolve(patch + ".sql")))
+    List<Path> scripts = Stream.of(
+        Stream.of(getProject().file("versioning").toPath().resolve("install.versioning.sql")),
+        StreamSupport.stream(iterable.spliterator(), false).map(patch -> patchesDir.resolve(patch + ".sql")),
+        Files.list(scriptsDir).filter(path -> !Files.isDirectory(path))
+        )
+        .flatMap(Function.identity())
         .collect(Collectors.toList());
     
     Path target = getProject().getBuildDir().toPath().resolve("scripts");

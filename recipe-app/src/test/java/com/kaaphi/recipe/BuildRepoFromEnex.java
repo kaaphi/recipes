@@ -4,18 +4,18 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import com.kaaphi.recipe.app.RecipeModule;
+import com.kaaphi.recipe.app.RunDevRecipeApp.DevRecipeModule;
 import com.kaaphi.recipe.enex.EnexToRecipe;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
+import com.kaaphi.recipe.users.UserRepository;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Set;
 import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
@@ -29,8 +29,11 @@ public class BuildRepoFromEnex {
   private File source;
   
   @Inject
-  public BuildRepoFromEnex(@Named("enexSourcePath") String enexPath, RecipeRepositoryFactory repoFactory) {
-    this.repo = repoFactory.createRepository(new User("kaaphi", Collections.emptyMap()));
+  public BuildRepoFromEnex(@Named("enexSourcePath") String enexPath, UserRepository userRepo, RecipeRepositoryFactory repoFactory) {
+    User user = userRepo.getUserByUsername("kaaphi");
+    log.info("User: <{}>", user);
+    
+    this.repo = repoFactory.createRepository(user);
     this.source = new File(enexPath);
   }
   
@@ -55,7 +58,7 @@ public class BuildRepoFromEnex {
   }
   
   public static void main(String[] args) throws Exception {
-    Injector injector = Guice.createInjector(new RecipeModule());
+    Injector injector = Guice.createInjector(new DevRecipeModule());
     
     BuildRepoFromEnex builder = injector.getInstance(BuildRepoFromEnex.class);
     builder.go();

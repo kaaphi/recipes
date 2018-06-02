@@ -26,6 +26,10 @@ public class User {
     authDetails.put(authMethod.getName(), auth);
   }
   
+  public String getAuthDetails(String authMethod) {
+    return authDetails.get(authMethod);
+  }
+  
   public String getAuthDetails(AuthenticationMethod authMethod) {
     return authDetails.get(authMethod.getDetailsType());
   }
