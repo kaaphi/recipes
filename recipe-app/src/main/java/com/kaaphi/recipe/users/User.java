@@ -26,11 +26,19 @@ public class User {
     authDetails.put(authMethod.getName(), auth);
   }
   
+  public void setAuthDetails(String authMethod, String auth) {
+    authDetails.put(authMethod, auth);
+  }
+  
   public String getAuthDetails(String authMethod) {
     return authDetails.get(authMethod);
   }
   
   public String getAuthDetails(AuthenticationMethod authMethod) {
     return authDetails.get(authMethod.getDetailsType());
+  }
+  
+  public String toString() {
+    return String.format("User[%s]", username);
   }
 }

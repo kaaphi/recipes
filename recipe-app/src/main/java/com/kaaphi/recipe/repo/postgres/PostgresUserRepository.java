@@ -27,7 +27,7 @@ public class PostgresUserRepository extends AbstractPostgresRepository implement
             int id = rs.getInt(1);
             String password = rs.getString(3);
 
-            return new DbUser(id, username, password);
+            return new DbUser(id, rs.getString(2), password);
           } else {
             return null;
           }  
@@ -52,14 +52,36 @@ public class PostgresUserRepository extends AbstractPostgresRepository implement
 
   @Override
   public void updateUser(User user) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException();
+    DbUser dbUser = getDbUser(user);
+    if(dbUser == null) {
+      throw new RecipeRepositoryException("User does not exist!");
+    }
+    
+    executeCall("updateUser(?, ?)", stmt -> {
+      stmt.setInt(1, dbUser.getId());
+      stmt.setString(2, dbUser.getAuthDetails(PasswordAuthentication.PASSWORD_TYPE));
+    });
   }
 
   @Override
   public void deleteUser(User user) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException();
+    DbUser dbUser = getDbUser(user);
+    if(dbUser == null) {
+      //already gone
+      return;
+    }
+    
+    executeCall("deleteUser(?)", stmt -> {
+      stmt.setInt(1, dbUser.getId());
+    });
+  }
+  
+  private DbUser getDbUser(User user) {
+    if(user instanceof DbUser) {
+      return (DbUser) user;
+    } else {
+      return (DbUser) getUserByUsername(user.getUsername());
+    }
   }
   
   static class DbUser extends User {
