@@ -25,8 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.velocity.app.VelocityEngine;
@@ -65,13 +68,13 @@ public abstract class RecipeModule extends AbstractModule {
   
   
   @Provides
-  DataSource provideDataSource(@Named("sql.url") String connectionUrl, @Named("sql.user") String user, @Named("sql.password") String password) {
+  DataSource provideDataSource(@Named("dbConfiguration") String dbUrlPathString) throws SQLException, IOException {
+    java.nio.file.Path dbUrlPath = Paths.get(dbUrlPathString);
+    String dbUrlString = Files.lines(dbUrlPath).findFirst().get();
+    
     //TODO pooling
     PGSimpleDataSource ds = new PGSimpleDataSource();
-    
-    ds.setURL(connectionUrl);
-    ds.setUser(user);
-    ds.setPassword(password);
+    ds.setURL(dbUrlString);
         
     return ds;
   }
@@ -109,34 +112,51 @@ public abstract class RecipeModule extends AbstractModule {
   }
   
   private Properties loadProperties() {
-    Properties props = new Properties();
+    try {
+      Properties defaults = new Properties();
+      try(InputStream in = getClass().getClassLoader().getResourceAsStream("defaults.properties")) {
+        defaults.load(in);
+      }
 
-    try(InputStream in = findPropertiesInputStream()) {
-      props.load(in);
+
+      Properties props = new Properties(defaults);
+
+      Optional<InputStream> customProps = findCustomPropertiesInputStream();
+      if(customProps.isPresent()) {
+        try(InputStream in = customProps.get()) {
+          props.load(in);
+        }
+      }
+      return props;
+
     } catch (IOException e) {
       throw new Error(e);
     }
-    return props;
   }
 
-  private InputStream findPropertiesInputStream() throws IOException {
+  private Optional<InputStream> findCustomPropertiesInputStream() throws IOException {
     //First try to find path from system properties
-    String path = System.getProperty("config");
-    if(path != null) {
-      log.info("Loading properties from system property path: {}", path);;
-      return Files.newInputStream(Paths.get(path));
+    Optional<Path> path = Optional.ofNullable(System.getProperty("config"))
+        .map(Paths::get)
+        ;
+    if(path.isPresent()) {
+      log.info("Loading properties from system property path: {}", path.get());
+      if(Files.exists(path.get())) {
+        return Optional.of(Files.newInputStream(path.get()));
+      } else {
+        log.info("No config file exists.");
+      }
     }
     
     //next try class path loading
     InputStream classpathStream = getClass().getClassLoader().getResourceAsStream("config.properties");
     if(classpathStream != null) {
       log.info("Loading config.properties from classpath");
-      return classpathStream;
+      return Optional.of(classpathStream);
     }
     
-    log.error("No configuration properties found!");
-    
-    throw new Error("No configuration properties found!");
+    log.info("No custom configuration properties found!");
+    return Optional.empty();
   }
 
   private static class InstantAdapter implements JsonSerializer<Instant>,JsonDeserializer<Instant> {
