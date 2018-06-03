@@ -1,1 +1,3 @@
 task buildDb(type : com.kaaphi.db.BuildDbScripts)
+
+build.dependsOn tasks.buildDb

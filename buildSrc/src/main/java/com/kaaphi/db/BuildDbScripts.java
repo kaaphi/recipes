@@ -68,11 +68,9 @@ public class BuildDbScripts extends DefaultTask {
         if(m.find()) {
           String patch = m.group(1);
           builder.addVertex(patch);
-          System.out.format("patch: <%s>%n", patch);
           if(m.group(3) != null) {
             Matcher depends = PATCH_NAME_PATTERN.matcher(m.group(3));
             while(depends.find()) {
-              System.out.format("   <%s>%n", depends.group(1));
               builder.addEdge(depends.group(1), patch);
             }
           }
