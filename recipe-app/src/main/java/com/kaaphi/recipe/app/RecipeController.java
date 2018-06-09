@@ -52,6 +52,10 @@ public class RecipeController {
 	  ctx.renderVelocity("/recipe_edit.html", getRecipeEditModel(ctx));
   }
   
+  public void renderDeleteRecipe(Context ctx) {
+    ctx.renderVelocity("/recipe_delete.html", getRecipeEditModel(ctx));
+  }
+  
   public void renderNewRecipe(Context ctx) {
     ctx.renderVelocity("/recipe_create.html", new HashMap<>());
   }

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" style="height:100%">
+  #head ( "Delete $recipe.recipe.title" )
+  <body style="height:100%">
+    #scripts
+    <div class="d-flex flex-column h-100">    
+    #navbar ( "delete" )
+    <script>
+    /*
+     * I am not a JS guy. This is totally naive code written from google searches.
+     */
+  function deleteRecipe() {
+  var XHR = new XMLHttpRequest();
+        
+  // Redirect on success
+  XHR.addEventListener('load', function(event) {
+    window.location.href = "/";
+  });
+
+  // Alert on error
+  XHR.addEventListener('error', function(event) {
+    alert('Oops! Something goes wrong.');
+  });
+  
+  XHR.open('DELETE', '/api/recipe/$recipe.id');
+  XHR.send(null);
+    }
+    </script>
+    <div class="container-fluid">
+    <div class="alert alert-warning">
+    Do you really want to delete <strong>$recipe.recipe.title</strong>?
+    </div>
+    <form>
+  	  <div class="form-group">
+ 	  <button type="button" class="btn btn-secondary" onClick="deleteRecipe()">Yes</button>
+ 	  <button type="button" class="btn btn-primary" onClick="window.location.href = '/recipe/$recipe.id'">Cancel</button>
+ 	  </div>
+ 	</form>
+ 	</div>
+  </div>
+  </body>
+</html>

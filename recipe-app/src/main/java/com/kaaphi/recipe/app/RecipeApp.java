@@ -59,6 +59,11 @@ public class RecipeApp {
         path("edit", () -> {
         	get(controller::renderEditRecipe);
         });
+        
+        path("delete", () -> {
+          get(controller::renderDeleteRecipe);
+      });
+
       });
     });
     

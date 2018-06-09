@@ -54,8 +54,10 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
 
   @Override
   public void deleteById(Set<UUID> toRemove) {
-    // TODO Auto-generated method stub
-
+    executeCall("deleteRecipes(?, ?)", stmt -> {
+      stmt.setInt(1, user.getId());
+      stmt.setArray(2,stmt.getConnection().createArrayOf("UUID", toRemove.toArray()) );
+    });
   }
 
   @Override
