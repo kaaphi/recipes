@@ -1,4 +1,7 @@
 version: "3.6"
+networks:
+  webnet:
+
 services:
   app:
     image: kaaphi/recipe-app:snapshot
@@ -18,6 +21,8 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    ports:
+      - "5432:5432"
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:
@@ -37,9 +42,6 @@ services:
     secrets:
       - dbUrl
     stdin_open: true
-
-networks:
-  webnet:
 
 volumes:
   dbdata:
