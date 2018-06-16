@@ -8,6 +8,9 @@
   
   <div class="row"><div class="col">
   <h1>$recipe.recipe.title</h1>
+  </div>
+  <div class="col align-self-end d-none d-md-block">
+  <p class="small font-italic text-muted text-right">$recipe.created</p>
   </div></div>
   
   <div class="row"><div class="col">
@@ -26,8 +29,9 @@
   
   #if ( !$recipe.recipe.sources.isEmpty() )
   <div class="row"><div class="col">
-  <a data-toggle="collapse" href="#sources" aria-expanded="false" aria-controls="sources">Sources</a>
-  <ul class="collapse multi-collapse" id="sources">
+  <details>
+  <summary>Sources</summary>
+  <ul>
   #foreach( $source in $recipe.recipe.sources )
   <li>
   #if ( $source.startsWith("http") )
@@ -38,6 +42,7 @@
   </li>
   #end
   </ul>
+  </details>
   </div></div>
   #end
   
