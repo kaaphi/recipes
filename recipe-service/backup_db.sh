@@ -1,7 +1,4 @@
 #!/bin/bash
 
-sudo docker run \
---rm \
---mount source=recipes_dbdata,destination=/var/lib/postgresql/data,readonly \
--v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /var/lib/postgresql/data
+docker exec $(docker ps --filter name=recipes_db -q) pg_dump -d postgres -U postgres > backup_`date +%Y%m%d`.dump
 
