@@ -1,5 +1,20 @@
 package com.kaaphi.recipe.app;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.Properties;
+import javax.sql.DataSource;
+import org.apache.velocity.app.VelocityEngine;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -21,21 +36,6 @@ import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import com.kaaphi.velocity.VelocitySLF4JLogChute;
 import io.javalin.Javalin;
 import io.javalin.translator.template.JavalinVelocityPlugin;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.Properties;
-import javax.sql.DataSource;
-import org.apache.velocity.app.VelocityEngine;
-import org.postgresql.ds.PGSimpleDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class RecipeModule extends AbstractModule {
   private static final Logger log = LoggerFactory.getLogger(RecipeModule.class);
@@ -68,10 +68,17 @@ public abstract class RecipeModule extends AbstractModule {
   
   
   @Provides
-  DataSource provideDataSource(@Named("dbConfiguration") String dbUrlPathString) throws SQLException, IOException {
-    java.nio.file.Path dbUrlPath = Paths.get(dbUrlPathString);
-    String dbUrlString = Files.lines(dbUrlPath).findFirst().get();
-    
+  DataSource provideDataSource(@Named("dbConfiguration") String dbConfiguration) throws SQLException, IOException {
+    String dbUrlString;
+    if(dbConfiguration.startsWith("jdbc:postgresql://")) {
+      log.debug("Loading DB with URL configuration.");
+      dbUrlString = dbConfiguration;
+    } else {
+      log.debug("Loading DB with URL from file {}.", dbConfiguration);
+      java.nio.file.Path dbUrlPath = Paths.get(dbConfiguration);
+      dbUrlString = Files.lines(dbUrlPath).findFirst().get();
+    }
+      
     //TODO pooling
     PGSimpleDataSource ds = new PGSimpleDataSource();
     ds.setURL(dbUrlString);
