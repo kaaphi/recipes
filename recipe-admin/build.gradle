@@ -1,8 +1,8 @@
 apply plugin: 'application'
 
-mainClassName = "com.kaaphi.recipe.admin.UserAdmin"
+mainClassName = "com.kaaphi.recipe.admin.Admin"
 
 dependencies {
-   	compile project(':recipe-core')
-   	compile project(':recipe-app')
+    compile project(':recipe-core')
+    compile project(':recipe-app')
 }
