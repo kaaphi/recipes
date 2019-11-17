@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.kaaphi.console.ConsoleApp;
-import com.kaaphi.recipe.app.ProductionRecipeModule;
+import com.kaaphi.recipe.module.ProductionRecipeModule;
 
 public class Admin {
   private final ConsoleApp console;
@@ -19,7 +19,7 @@ public class Admin {
   }
   
   public static void main(String[] args) {
-    Injector injector = Guice.createInjector(new ProductionRecipeModule());
+    Injector injector = Guice.createInjector(ProductionRecipeModule.getProductionModule());
     
     injector.getInstance(Admin.class).run();
   }

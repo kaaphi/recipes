@@ -1,15 +1,5 @@
 package com.kaaphi.recipe;
 
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.name.Named;
-import com.kaaphi.recipe.app.RunDevRecipeApp.DevRecipeModule;
-import com.kaaphi.recipe.enex.EnexToRecipe;
-import com.kaaphi.recipe.repo.RecipeRepository;
-import com.kaaphi.recipe.users.RecipeRepositoryFactory;
-import com.kaaphi.recipe.users.User;
-import com.kaaphi.recipe.users.UserRepository;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +11,16 @@ import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.name.Named;
+import com.kaaphi.recipe.enex.EnexToRecipe;
+import com.kaaphi.recipe.module.RecipeModule;
+import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.users.RecipeRepositoryFactory;
+import com.kaaphi.recipe.users.User;
+import com.kaaphi.recipe.users.UserRepository;
 
 public class BuildRepoFromEnex {
   private static final Logger log = LoggerFactory.getLogger(BuildRepoFromEnex.class);
@@ -58,7 +58,7 @@ public class BuildRepoFromEnex {
   }
   
   public static void main(String[] args) throws Exception {
-    Injector injector = Guice.createInjector(new DevRecipeModule());
+    Injector injector = Guice.createInjector(new RecipeModule());
     
     BuildRepoFromEnex builder = injector.getInstance(BuildRepoFromEnex.class);
     builder.go();

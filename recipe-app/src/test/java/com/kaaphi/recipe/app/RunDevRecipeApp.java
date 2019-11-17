@@ -1,27 +1,24 @@
 package com.kaaphi.recipe.app;
 
+import org.apache.velocity.app.VelocityEngine;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.kaaphi.recipe.repo.jsonfile.JsonRecipeRepository;
-import com.kaaphi.recipe.repo.postgres.PostgresRecipeRepository;
-import com.kaaphi.recipe.repo.postgres.PostgresUserRepository;
-import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
-import org.apache.velocity.app.VelocityEngine;
+import com.kaaphi.recipe.module.RecipeModule;
+import com.kaaphi.recipe.module.VelocityModule;
 
 public class RunDevRecipeApp {
   public static void main(String[] args) {
-    Injector injector = Guice.createInjector(new DevRecipeModule());
+    Injector injector = Guice.createInjector(
+        new RecipeModule(),
+        new DevVelocityModule()
+        );
     
     RecipeApp app = injector.getInstance(RecipeApp.class);
     
     app.start();
   }
   
-  public static class DevRecipeModule extends RecipeModule {
-    public DevRecipeModule() {
-      super(PostgresUserRepository.class, MemoryLongTermAuthRepo.class, PostgresRecipeRepository.class);  
-    }
-    
+  public static class DevVelocityModule extends VelocityModule {
     @Override
     protected void configureVelocityEngine(VelocityEngine velocityEngine) {
       velocityEngine.setProperty("resource.loader", "file");  

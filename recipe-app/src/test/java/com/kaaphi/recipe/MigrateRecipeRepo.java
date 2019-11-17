@@ -1,17 +1,17 @@
 package com.kaaphi.recipe;
 
+import java.util.Collections;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import com.kaaphi.recipe.app.ProductionRecipeModule;
+import com.kaaphi.recipe.module.RecipeModule;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.jsonfile.JsonRecipeRepository;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
-import java.util.Collections;
 
 public class MigrateRecipeRepo {
   
@@ -25,7 +25,7 @@ public class MigrateRecipeRepo {
   }
   
   public static void main(String[] args) throws Exception {
-    Injector injector = Guice.createInjector(new ProductionRecipeModule());
+    Injector injector = Guice.createInjector(new RecipeModule());
     
     MigrateRecipeRepo migrate = injector.getInstance(MigrateRecipeRepo.class);
         

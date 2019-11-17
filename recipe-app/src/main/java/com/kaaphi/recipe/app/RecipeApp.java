@@ -8,6 +8,7 @@ import static io.javalin.ApiBuilder.put;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.kaaphi.recipe.module.ProductionRecipeModule;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,7 @@ public class RecipeApp {
   }
   
   public static void main(String[] args) {
-    Injector injector = Guice.createInjector(new ProductionRecipeModule());
+    Injector injector = Guice.createInjector(ProductionRecipeModule.getProductionModule());
     
     RecipeApp app = injector.getInstance(RecipeApp.class);
     

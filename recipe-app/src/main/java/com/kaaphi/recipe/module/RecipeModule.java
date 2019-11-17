@@ -1,4 +1,4 @@
-package com.kaaphi.recipe.app;
+package com.kaaphi.recipe.module;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,20 +30,26 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.repo.postgres.PostgresRecipeRepository;
+import com.kaaphi.recipe.repo.postgres.PostgresUserRepository;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
-import com.kaaphi.velocity.VelocitySLF4JLogChute;
+import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
 import io.javalin.Javalin;
 import io.javalin.translator.template.JavalinVelocityPlugin;
 
-public abstract class RecipeModule extends AbstractModule {
+public class RecipeModule extends AbstractModule {
   private static final Logger log = LoggerFactory.getLogger(RecipeModule.class);
 
   private final Class<? extends UserRepository> userRepoClass;
   private final Class<? extends LongTermAuthRepository> longTermAuthRepoClass;
   private final Class<? extends RecipeRepository> recipeRepoClass;
     
+  public RecipeModule() {
+    this(PostgresUserRepository.class, MemoryLongTermAuthRepo.class, PostgresRecipeRepository.class);
+  }
+  
   public RecipeModule(Class<? extends UserRepository> userRepoClass,
       Class<? extends LongTermAuthRepository> longTermAuthRepoClass,
       Class<? extends RecipeRepository> recipeRepoClass) {
@@ -68,18 +74,8 @@ public abstract class RecipeModule extends AbstractModule {
   
   
   @Provides
-  DataSource provideDataSource(@Named("dbConfiguration") String dbConfiguration) throws SQLException, IOException {
-    String dbUrlString;
-    if(dbConfiguration.startsWith("jdbc:postgresql://")) {
-      log.debug("Loading DB with URL configuration.");
-      dbUrlString = dbConfiguration;
-    } else {
-      log.debug("Loading DB with URL from file {}.", dbConfiguration);
-      java.nio.file.Path dbUrlPath = Paths.get(dbConfiguration);
-      dbUrlString = Files.lines(dbUrlPath).findFirst().get();
-    }
-      
-    //TODO pooling
+  DataSource provideDataSource(@Named("dbUrl") String dbUrlString) throws SQLException, IOException {
+      //TODO pooling
     PGSimpleDataSource ds = new PGSimpleDataSource();
     ds.setURL(dbUrlString);
         
@@ -93,16 +89,6 @@ public abstract class RecipeModule extends AbstractModule {
         .enableStandardRequestLogging()
         .port(7000);        
   }
-  
-  @Provides
-  VelocityEngine provideVelocityEngine() {
-    VelocityEngine velocityEngine = new VelocityEngine();
-    velocityEngine.setProperty("runtime.log.logsystem", new VelocitySLF4JLogChute());
-    configureVelocityEngine(velocityEngine);    
-    return velocityEngine;
-  }
-  
-  protected abstract void configureVelocityEngine(VelocityEngine velocityEngine);
   
   @Provides
   Gson provideGson() {
