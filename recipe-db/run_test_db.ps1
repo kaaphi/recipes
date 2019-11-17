@@ -21,4 +21,12 @@ docker run `
 --network="$Network" `
 --mount type=volume,source=recipes_test_db,target=/var/lib/postgresql/data `
 --mount type=bind,source=$(Resolve-Path test-data),target=/docker-entrypoint-initdb.d `
+--mount type=bind,source=$(Resolve-Path build\scripts),target=/dbscripts `
 postgres:10.4-alpine
+
+Start-Sleep -Seconds 2
+
+docker exec `
+test-recipe-db `
+/bin/sh -c 'for f in /dbscripts/*; do echo Running $f; psql -U postgres --set ON_ERROR_STOP=on postgres -f $f; done'
+
