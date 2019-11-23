@@ -20,10 +20,6 @@ CREATE OR REPLACE FUNCTION getAllRecipes ( IN in_userId INTEGER )
 RETURNS TABLE ( recipe JSONB ) AS $$
 	SELECT recipe FROM Recipes 
 	WHERE userId = in_userId 
-	UNION
-	SELECT recipe FROM Recipes
-	JOIN ShareRecipes ON Recipe.userId = ShareRecipes.fromUserId
-	WHERE ShareRecipes.toUserId = in_userId
 	ORDER BY recipe->'recipe'->'title'
 $$ LANGUAGE sql;
 
