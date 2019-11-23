@@ -11,4 +11,7 @@ public interface UserRepository {
   public void deleteUser(User user);
   public AuthenticatableUser getAuthenticatableUser(String username);
   public void setAuthDetails(User user, Map<String,String> details);
+  public List<UserShare> getSharesForUser(User user);
+  public void addUserShare(UserShare share);  
+  public void deleteUserShare(UserShare share);
 }

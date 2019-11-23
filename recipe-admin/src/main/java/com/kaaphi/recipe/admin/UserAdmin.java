@@ -8,6 +8,7 @@ import com.kaaphi.console.ConsoleCommand;
 import com.kaaphi.recipe.users.AuthenticatableUser;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
+import com.kaaphi.recipe.users.UserShare;
 import com.kaaphi.recipe.users.auth.PasswordAuthentication;
 
 @CommandContextClass("user")
@@ -43,6 +44,25 @@ public class UserAdmin {
     } else {
       userRepo.deleteUser(user);
     }    
+  }
+  
+  @ConsoleCommand
+  public void showShare(PrintStream out, String username) {
+    userRepo.getSharesForUser(userRepo.getUserByUsername(username))
+    .stream()
+    .map(UserShare::getToUser)
+    .map(User::getUsername)
+    .forEach(out::println);
+  }
+  
+  @ConsoleCommand
+  public void addShare(PrintStream out, String fromUserName, String toUserName) {
+    userRepo.addUserShare(new UserShare(userRepo.getUserByUsername(fromUserName), userRepo.getUserByUsername(toUserName)));
+  }
+  
+  @ConsoleCommand
+  public void deleteShare(PrintStream out, String fromUserName, String toUserName) {
+    userRepo.deleteUserShare(new UserShare(userRepo.getUserByUsername(fromUserName), userRepo.getUserByUsername(toUserName)));
   }
   
   @ConsoleCommand
