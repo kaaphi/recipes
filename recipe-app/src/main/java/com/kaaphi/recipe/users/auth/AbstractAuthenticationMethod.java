@@ -1,5 +1,6 @@
 package com.kaaphi.recipe.users.auth;
 
+import com.kaaphi.recipe.users.AuthenticatableUser;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
 import io.javalin.Context;
@@ -8,7 +9,7 @@ public abstract class AbstractAuthenticationMethod implements AuthenticationMeth
 
   @Override
   public User authenticate(Context ctx, UserRepository repo) {
-    User user = repo.getUserByUsername(getUsername(ctx));
+    AuthenticatableUser user = repo.getAuthenticatableUser(getUsername(ctx));
     
     if(user == null) {
       return null;
@@ -17,7 +18,7 @@ public abstract class AbstractAuthenticationMethod implements AuthenticationMeth
     String authDetails = user.getAuthDetails(this);
     
     if(authDetails != null && authenticate(authDetails, ctx)) {
-      return user;
+      return user.getUser();
     } else {
       return null;
     }

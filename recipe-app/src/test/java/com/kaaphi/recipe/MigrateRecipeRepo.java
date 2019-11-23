@@ -29,7 +29,7 @@ public class MigrateRecipeRepo {
     
     MigrateRecipeRepo migrate = injector.getInstance(MigrateRecipeRepo.class);
         
-    RecipeRepository source = new JsonRecipeRepository("/home/kaaphi/code/recipes_docker_volume", migrate.storeGson, new User("kaaphi", Collections.emptyMap()));
+    RecipeRepository source = new JsonRecipeRepository("/home/kaaphi/code/recipes_docker_volume", migrate.storeGson, new User("kaaphi"));
     
     //System.out.println("SOURCE:");
     migrate.target.saveAll(source.getAll());

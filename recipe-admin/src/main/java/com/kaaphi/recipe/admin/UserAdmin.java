@@ -5,6 +5,7 @@ import java.util.Collections;
 import com.google.inject.Inject;
 import com.kaaphi.console.CommandContextClass;
 import com.kaaphi.console.ConsoleCommand;
+import com.kaaphi.recipe.users.AuthenticatableUser;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.PasswordAuthentication;
@@ -21,7 +22,7 @@ public class UserAdmin {
   
   @ConsoleCommand
   public void add(PrintStream out, String username, String password) {
-    userRepo.addUser(new User(username, Collections.singletonMap(PasswordAuthentication.PASSWORD_TYPE, PasswordAuthentication.generateNewDetails(password))));
+    userRepo.addUser(new AuthenticatableUser(username, PasswordAuthentication.PASSWORD_TYPE, PasswordAuthentication.generateNewDetails(password)));
   }
   
   @ConsoleCommand
@@ -30,8 +31,7 @@ public class UserAdmin {
     if(user == null) {
       out.println("No user with that name exists!");      
     } else {
-      user.setAuthDetails(PasswordAuthentication.PASSWORD_TYPE, PasswordAuthentication.generateNewDetails(password));
-      userRepo.updateUser(user);
+      userRepo.setAuthDetails(user, Collections.singletonMap(PasswordAuthentication.PASSWORD_TYPE, PasswordAuthentication.generateNewDetails(password)));
     }    
   }
   
@@ -43,6 +43,13 @@ public class UserAdmin {
     } else {
       userRepo.deleteUser(user);
     }    
+  }
+  
+  @ConsoleCommand
+  public void showAll(PrintStream out) {
+    userRepo.getAll().stream()
+    .map(User::getUsername)
+    .forEach(out::println);
   }
   
   @ConsoleCommand
