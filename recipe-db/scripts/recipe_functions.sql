@@ -16,14 +16,24 @@ $$ LANGUAGE sql;
 DROP FUNCTION IF EXISTS getRecipe;
 CREATE OR REPLACE FUNCTION getRecipe ( IN in_userId INTEGER, IN in_id UUID )
 RETURNS TABLE ( id UUID, recipe JSONB, createdTime TIMESTAMP, updatedTime TIMESTAMP ) AS $$
-	SELECT id, recipe, createdTime, updatedTime FROM Recipes WHERE userId = in_userId AND id = in_id
+	SELECT r.id, r.recipe, r.createdTime, r.updatedTime, u.id, u.username FROM Recipes r
+	JOIN Users u ON r.userId = u.id
+	WHERE r.userId = in_userId AND r.id = in_id
 $$ LANGUAGE sql;
 
 DROP FUNCTION IF EXISTS getAllRecipes;
 CREATE OR REPLACE FUNCTION getAllRecipes ( IN in_userId INTEGER )
-RETURNS TABLE ( id UUID, recipe JSONB, createdTime TIMESTAMP, updatedTime TIMESTAMP ) AS $$
-	SELECT id, recipe, createdTime, updatedTime FROM Recipes 
-	WHERE userId = in_userId 
+RETURNS TABLE ( id UUID, recipe JSONB, createdTime TIMESTAMP, updatedTime TIMESTAMP, userId INTEGER, username VARCHAR(256) ) AS $$
+	WITH userRecipes AS (
+		SELECT id, userId, recipe, createdTime, updatedTime FROM Recipes r
+		WHERE userId = in_userId
+		UNION
+		SELECT r.id, r.userId, r.recipe, r.createdTime, r.updatedTime FROM Recipes r
+		JOIN ShareRecipes sr ON sr.fromUserId = r.userid
+		WHERE sr.toUserId = in_userId
+	)
+	SELECT ur.id, ur.recipe, ur.createdTime, ur.updatedTime, u.id, u.username  FROM userRecipes ur
+	JOIN Users u ON u.id = ur.userId
 	ORDER BY recipe->'title'
 $$ LANGUAGE sql;
 

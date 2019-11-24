@@ -36,13 +36,13 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
 
   @Override
   public Set<RecipeBookEntry> getAll() {
-    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime FROM getAllRecipes(?)", stmt -> stmt.setInt(1, user.getId()), this::getRecipeBookEntryFromResultSet)
+    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime, username FROM getAllRecipes(?)", stmt -> stmt.setInt(1, user.getId()), this::getRecipeBookEntryFromResultSet)
     .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
   public RecipeBookEntry get(UUID id) {
-    return executeQuery("SELECT id, recipe, createdTime, updatedTime FROM getRecipe(?, ?)", 
+    return executeQuery("SELECT id, recipe, createdTime, updatedTime, username FROM getRecipe(?, ?)", 
         stmt -> {
           stmt.setInt(1, user.getId());
           stmt.setObject(2, id);
@@ -57,7 +57,7 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
   }
   
   private RecipeBookEntry getRecipeBookEntryFromResultSet(ResultSet rs) throws JsonSyntaxException, SQLException {
-    return new RecipeBookEntry((UUID)rs.getObject(1), gson.fromJson(rs.getString(2), Recipe.class), toInstant(rs.getTimestamp(3)), toInstant(rs.getTimestamp(4)));
+    return new RecipeBookEntry((UUID)rs.getObject(1), gson.fromJson(rs.getString(2), Recipe.class), toInstant(rs.getTimestamp(3)), toInstant(rs.getTimestamp(4)), new User(rs.getString(5)));
   }
   
   private static Instant toInstant(Timestamp ts) {

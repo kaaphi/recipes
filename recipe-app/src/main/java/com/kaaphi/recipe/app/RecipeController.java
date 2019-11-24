@@ -15,6 +15,7 @@ import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
 import io.javalin.Context;
 import io.javalin.HaltException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -118,8 +119,10 @@ public class RecipeController {
     UUID id = parseUUID(ctx);
     
     Recipe recipe = parseRecipe(ctx);
-        
-    recipeRepo(ctx).save(id, recipe);
+    
+    RecipeBookEntry entry = new RecipeBookEntry(id, recipe, null, null, getUser(ctx));
+    
+    recipeRepo(ctx).save(entry);
   }
   
   private Recipe parseRecipe(Context ctx) {
@@ -133,7 +136,9 @@ public class RecipeController {
   public void createRecipe(Context ctx) {
     Recipe recipe = parseRecipe(ctx);
     
-    RecipeBookEntry entry = recipeRepo(ctx).save(UUID.randomUUID(), recipe);
+    RecipeBookEntry entry = new RecipeBookEntry(UUID.randomUUID(), recipe, Instant.now(), null, getUser(ctx));
+    
+    recipeRepo(ctx).save(entry);
     
     ctx.result(gson.toJson(entry));
   }

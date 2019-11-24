@@ -63,7 +63,7 @@ public class EnexToRecipe {
     Instant created = parseInstant(note.getCreated(), Instant::now);
     Instant updated = parseInstant(note.getUpdated(), () -> null);
    
-    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated);
+    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated, null);
   }
 
   private List<String> getSources(Note note) {
@@ -93,7 +93,7 @@ public class EnexToRecipe {
     Instant created = parseInstant(note.getCreated(), Instant::now);
     Instant updated = parseInstant(note.getUpdated(), () -> null);
    
-    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated);
+    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated, null);
   }
   
   public EnExport loadExport(File file) throws JAXBException, XMLStreamException {
