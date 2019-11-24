@@ -15,7 +15,7 @@ $$ LANGUAGE sql;
 
 DROP FUNCTION IF EXISTS getRecipe;
 CREATE OR REPLACE FUNCTION getRecipe ( IN in_userId INTEGER, IN in_id UUID )
-RETURNS TABLE ( id UUID, recipe JSONB, createdTime TIMESTAMP, updatedTime TIMESTAMP ) AS $$
+RETURNS TABLE ( id UUID, recipe JSONB, createdTime TIMESTAMP, updatedTime TIMESTAMP, userId INTEGER, username VARCHAR(256) ) AS $$
 	SELECT r.id, r.recipe, r.createdTime, r.updatedTime, u.id, u.username FROM Recipes r
 	JOIN Users u ON r.userId = u.id
 	WHERE r.userId = in_userId AND r.id = in_id

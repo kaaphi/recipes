@@ -10,8 +10,14 @@
   <h1>$recipe.recipe.title</h1>
   </div>
   <div class="col align-self-end d-none d-md-block">
-  <p class="small font-italic text-muted text-right">$recipe.created</p>
+  <p class="small font-italic text-muted text-right">$recipe.created#if ($recipe.updated) ($recipe.updated)#end</p>
   </div></div>
+  
+  #if(!$ownedByCurrentUser)
+  <div class="row"><div class="col">
+  <p class="font-italic">a recipe by $owner</p>
+  </div></div>
+  #end
   
   <div class="row"><div class="col">
   <h2>Ingredients</h2>
