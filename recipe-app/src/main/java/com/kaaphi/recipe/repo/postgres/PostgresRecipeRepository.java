@@ -1,18 +1,25 @@
 package com.kaaphi.recipe.repo.postgres;
 
-import com.google.gson.Gson;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.google.inject.name.Named;
-import com.kaaphi.recipe.RecipeBookEntry;
-import com.kaaphi.recipe.repo.RecipeRepository;
-import com.kaaphi.recipe.repo.postgres.PostgresUserRepository.DbUser;
-import com.kaaphi.recipe.users.User;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.name.Named;
+import com.kaaphi.recipe.Recipe;
+import com.kaaphi.recipe.RecipeBookEntry;
+import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.repo.postgres.PostgresUserRepository.DbUser;
+import com.kaaphi.recipe.users.User;
 
 public class PostgresRecipeRepository extends AbstractPostgresRepository
     implements RecipeRepository {
@@ -29,27 +36,32 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
 
   @Override
   public Set<RecipeBookEntry> getAll() {
-    return executeQueryStream("SELECT recipe FROM getAllRecipes(?)", stmt -> stmt.setInt(1, user.getId()),
-        rs -> {
-          return gson.fromJson(rs.getString(1), RecipeBookEntry.class);
-        })
+    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime, username FROM getAllRecipes(?)", stmt -> stmt.setInt(1, user.getId()), this::getRecipeBookEntryFromResultSet)
     .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
   public RecipeBookEntry get(UUID id) {
-    return executeQuery("SELECT recipe FROM getRecipe(?, ?)", 
+    return executeQuery("SELECT id, recipe, createdTime, updatedTime, username FROM getRecipe(?, ?)", 
         stmt -> {
           stmt.setInt(1, user.getId());
           stmt.setObject(2, id);
         },
         rs -> {
           if(rs.next()) {
-            return gson.fromJson(rs.getString(1), RecipeBookEntry.class);
+            return getRecipeBookEntryFromResultSet(rs);
           } else {
             return null;
           }
         });
+  }
+  
+  private RecipeBookEntry getRecipeBookEntryFromResultSet(ResultSet rs) throws JsonSyntaxException, SQLException {
+    return new RecipeBookEntry((UUID)rs.getObject(1), gson.fromJson(rs.getString(2), Recipe.class), toInstant(rs.getTimestamp(3)), toInstant(rs.getTimestamp(4)), new User(rs.getString(5)));
+  }
+  
+  private static Instant toInstant(Timestamp ts) {
+    return Optional.ofNullable(ts).map(Timestamp::toInstant).orElse(null);
   }
 
   @Override
@@ -70,7 +82,7 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
     executeCall("insertOrUpdateRecipe(?, ?, ?::JSONB)", stmt -> {
       stmt.setInt(1, user.getId());
       stmt.setObject(2, recipe.getId());
-      stmt.setObject(3, gson.toJson(recipe));
+      stmt.setObject(3, gson.toJson(recipe.getRecipe()));
     });
   }
   

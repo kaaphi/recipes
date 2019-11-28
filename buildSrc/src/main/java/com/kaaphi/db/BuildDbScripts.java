@@ -25,16 +25,18 @@ public class BuildDbScripts extends DefaultTask {
     Path scriptsDir = getProject().file("scripts").toPath();
     Path patchesDir = scriptsDir.resolve("patches");
   
-    GraphBuilder<String, Boolean, ? extends DirectedAcyclicGraph<String, Boolean>> builder = DirectedAcyclicGraph.createBuilder(() -> true);
+    GraphBuilder<String, Depends, ? extends DirectedAcyclicGraph<String, Depends>> builder = DirectedAcyclicGraph.createBuilder(Depends::new);
     
     Files.list(patchesDir)
     .forEach(path -> parseDependencies(path, builder));
     getLogger().info(getPath());
     
-    DirectedAcyclicGraph<String, Boolean> graph = builder.build();
+    DirectedAcyclicGraph<String, Depends> graph = builder.build();
     
             
     Iterable<String> iterable = () -> new TopologicalOrderIterator<>(graph);
+    
+    System.out.println(graph.toString());
     
     List<Path> scripts = Stream.of(
         Stream.of(getProject().file("versioning").toPath().resolve("install.versioning.sql")),
@@ -58,7 +60,7 @@ public class BuildDbScripts extends DefaultTask {
 
   private static final Pattern PATCH_PATTERN = Pattern.compile("_v.register_patch\\('([^']+)'(,\\s*ARRAY\\s*\\[(.*)\\])?");
   private static final Pattern PATCH_NAME_PATTERN = Pattern.compile("'([^']+)'");
-  private void parseDependencies(Path path, GraphBuilder<String, Boolean, ? extends DirectedAcyclicGraph<String, Boolean>> builder) {
+  private void parseDependencies(Path path, GraphBuilder<String, Depends, ? extends DirectedAcyclicGraph<String, Depends>> builder) {
     try {
       Files.lines(path)
       .filter(line -> line.contains("_v.register_patch"))
@@ -80,5 +82,11 @@ public class BuildDbScripts extends DefaultTask {
       throw new Error(e);
     }
 
+  }
+  
+  private static class Depends {
+    public String toString() {
+      return "Depends";
+    }
   }
 }

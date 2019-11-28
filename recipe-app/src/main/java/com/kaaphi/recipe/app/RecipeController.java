@@ -1,6 +1,17 @@
 package com.kaaphi.recipe.app;
 
 import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.github.rjeschke.txtmark.Processor;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -15,16 +26,6 @@ import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
 import io.javalin.Context;
 import io.javalin.HaltException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RecipeController {
   private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
@@ -82,6 +83,8 @@ public class RecipeController {
     
     return model(b -> b
         .put("recipe", r)
+        .put("owner", r.getOwner().getUsername())
+        .put("ownedByCurrentUser", r.getOwner().equals(getUser(ctx)))
         .put("ingredients", ingredients)
         .put("method", Processor.process(r.getRecipe().getMethod()))
         );
@@ -118,8 +121,19 @@ public class RecipeController {
     UUID id = parseUUID(ctx);
     
     Recipe recipe = parseRecipe(ctx);
-        
-    recipeRepo(ctx).save(id, recipe);
+    
+    RecipeRepository repo = recipeRepo(ctx);
+    User user = getUser(ctx);
+    
+    RecipeBookEntry current = repo.get(id);
+    if(current == null) {
+      ctx.status(404);
+    } else if(!current.getOwner().equals(user)) {
+      ctx.status(401);
+    } else {
+      RecipeBookEntry entry = new RecipeBookEntry(id, recipe, current.getCreated(), Instant.now(), user);
+      repo.save(entry);
+    }
   }
   
   private Recipe parseRecipe(Context ctx) {
@@ -133,14 +147,27 @@ public class RecipeController {
   public void createRecipe(Context ctx) {
     Recipe recipe = parseRecipe(ctx);
     
-    RecipeBookEntry entry = recipeRepo(ctx).save(UUID.randomUUID(), recipe);
+    RecipeBookEntry entry = new RecipeBookEntry(UUID.randomUUID(), recipe, Instant.now(), null, getUser(ctx));
+    
+    recipeRepo(ctx).save(entry);
     
     ctx.result(gson.toJson(entry));
   }
   
   public void deleteRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
-    recipeRepo(ctx).delete(uuid);
+    
+    RecipeRepository repo = recipeRepo(ctx);
+    User user = getUser(ctx);
+    
+    RecipeBookEntry current = repo.get(uuid);
+    if(current == null) {
+      ctx.status(404);
+    } else if(!current.getOwner().equals(user)) {
+      ctx.status(401);
+    } else {
+      repo.delete(uuid);
+    }
   } 
   
   public void render(Context ctx) {

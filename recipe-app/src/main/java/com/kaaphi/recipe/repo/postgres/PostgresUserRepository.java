@@ -10,6 +10,7 @@ import com.kaaphi.recipe.repo.RecipeRepositoryException;
 import com.kaaphi.recipe.users.AuthenticatableUser;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
+import com.kaaphi.recipe.users.UserShare;
 import com.kaaphi.recipe.users.auth.PasswordAuthentication;
 
 public class PostgresUserRepository extends AbstractPostgresRepository implements UserRepository {
@@ -101,6 +102,42 @@ public class PostgresUserRepository extends AbstractPostgresRepository implement
     
     executeCall("deleteUser(?)", stmt -> {
       stmt.setInt(1, dbUser.getId());
+    });
+  }
+  
+  @Override
+  public List<UserShare> getSharesForUser(User user) {
+    DbUser dbUser = getDbUser(user);
+    return executeQuery("SELECT id, username FROM getUserShare(?)", 
+        stmt -> {
+          stmt.setInt(1, dbUser.getId());
+        },
+        rs -> {
+          List<UserShare> shares = new ArrayList<>();
+          while(rs.next()) {
+            shares.add(new UserShare(user, new DbUser(rs.getInt(1), rs.getString(2))));
+          }
+          return shares;
+        });
+  }
+
+  @Override
+  public void addUserShare(UserShare share) {
+    DbUser fromUser = getDbUser(share.getFromUser());
+    DbUser toUser = getDbUser(share.getToUser());
+    executeCall("addUserShare(?,?)", stmt -> {
+      stmt.setInt(1, fromUser.getId());
+      stmt.setInt(2, toUser.getId());
+    });
+  }
+
+  @Override
+  public void deleteUserShare(UserShare share) {
+    DbUser fromUser = getDbUser(share.getFromUser());
+    DbUser toUser = getDbUser(share.getToUser());
+    executeCall("deleteUserShare(?,?)", stmt -> {
+      stmt.setInt(1, fromUser.getId());
+      stmt.setInt(2, toUser.getId());
     });
   }
   

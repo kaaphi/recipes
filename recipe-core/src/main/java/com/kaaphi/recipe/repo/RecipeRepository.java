@@ -1,12 +1,10 @@
 package com.kaaphi.recipe.repo;
 
-import com.kaaphi.recipe.Recipe;
-import com.kaaphi.recipe.RecipeBookEntry;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.kaaphi.recipe.RecipeBookEntry;
 
 public interface RecipeRepository {
   public Set<RecipeBookEntry> getAll();
@@ -24,10 +22,5 @@ public interface RecipeRepository {
   public void saveAll(Set<RecipeBookEntry> recipes);
   public default void save(RecipeBookEntry recipe) {
     saveAll(Collections.singleton(recipe));
-  }
-  public default RecipeBookEntry save(UUID id, Recipe recipe) {
-    RecipeBookEntry result = new RecipeBookEntry(id, recipe, Instant.now(), Instant.now());
-    save(result);
-    return result;
   }
 }
