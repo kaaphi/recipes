@@ -33,7 +33,7 @@ public class LoginController {
   
   public void validateLoggedIn(Context ctx) throws IOException {
     //always allow static resources
-    if(ClassLoader.getSystemResource("static" + ctx.path()) != null) {
+    if(!"/".equals(ctx.path()) && ClassLoader.getSystemResource("static" + ctx.path()) != null) {
       return;
     }
     
