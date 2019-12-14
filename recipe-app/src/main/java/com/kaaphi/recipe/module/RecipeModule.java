@@ -87,6 +87,7 @@ public class RecipeModule extends AbstractModule {
     JavalinVelocityPlugin.configure(engine);    
     return Javalin.create()
         .enableStandardRequestLogging()
+        .enableStaticFiles("/static")
         .port(7000);        
   }
   

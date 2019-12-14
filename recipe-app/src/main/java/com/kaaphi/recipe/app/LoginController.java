@@ -32,6 +32,11 @@ public class LoginController {
   }
   
   public void validateLoggedIn(Context ctx) throws IOException {
+    //always allow static resources
+    if(ClassLoader.getSystemResource("static" + ctx.path()) != null) {
+      return;
+    }
+    
     if(ctx.sessionAttribute(CURRENT_USER) == null) {
       log.trace("No logged in user. Path {} Matched Path {}", ctx.path(), ctx.matchedPath());
       //check for long-term auth token
