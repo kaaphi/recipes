@@ -33,6 +33,11 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
     this.gson = gson;
     this.user = (DbUser) user;
   }
+  
+  @Override
+  public User getUser() {
+    return user;
+  }
 
   @Override
   public Set<RecipeBookEntry> getAll() {

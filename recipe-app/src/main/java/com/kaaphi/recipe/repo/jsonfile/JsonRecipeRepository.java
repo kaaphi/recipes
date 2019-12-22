@@ -21,12 +21,20 @@ import java.util.stream.Collectors;
 
 public class JsonRecipeRepository extends AbstractFileRepo implements RecipeRepository {
   private final Gson gson;
+  private final User user;
   
   @Inject
   public JsonRecipeRepository(@Named("jsonRepoPath") String store, @Named("repoGson") Gson gson, @Assisted User user) {
     super(store, "recipes_" + user.getUsername() + ".json");
     this.gson = gson;
+    this.user = user;
   }
+  
+  @Override
+  public User getUser() {
+    return user;
+  }
+
     
   @Override
   public Set<RecipeBookEntry> getAll() {
