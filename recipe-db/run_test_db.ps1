@@ -1,6 +1,7 @@
 Param (
     [switch]$RebuildDB = $false,
-    [string]$Network = "recipe-net"
+    [string]$Network = "recipe-net",
+    [string]$BackupPath = "test-data"
 )
 
 Write-Host "Stopping and removing container if necessary."
@@ -20,7 +21,7 @@ docker run `
 -e POSTGRES_PASSWORD=mysecretpassword `
 --network="$Network" `
 --mount type=volume,source=recipes_test_db,target=/var/lib/postgresql/data `
---mount type=bind,source=$(Resolve-Path test-data),target=/docker-entrypoint-initdb.d `
+--mount type=bind,source=$(Resolve-Path $BackupPath),target=/docker-entrypoint-initdb.d `
 --mount type=bind,source=$(Resolve-Path build\scripts),target=/dbscripts `
 postgres:10.4-alpine
 
