@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
-  #head ( "Recipes" )
+  #head ( $title )
   <body>
   #scripts
   #navbar ( "home", false )
   <div class="container-fluid">
-  <h1>All Recipes</h1>
+  <h1>$title</h1>
   <ul class="list-group">
    	#foreach( $recipe in $allRecipes )
     <li class="list-group-item"><a href="recipe/$recipe.Id">$recipe.Recipe.Title</a></li>

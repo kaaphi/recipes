@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,16 @@ public class RecipeController {
     this.txtFormat = txtFormat;
   }
   
-  public void renderRecipeList(Context ctx) {
-	  ctx.renderVelocity("/index.html", getRecipeListModel(ctx));
+  public void renderAllRecipeList(Context ctx) {
+	  ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "All Recipes", RecipeRepository::getAll));
+  }
+  
+  public void renderOwnedRecipeList(Context ctx) {
+    ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "My Recipes", RecipeRepository::getOwned));
+  }
+  
+  public void renderSharedRecipeList(Context ctx) {
+    ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "Shared Recipes", RecipeRepository::getShared));
   }
   
   public void renderRecipe(Context ctx) {
@@ -61,8 +70,11 @@ public class RecipeController {
     ctx.renderVelocity("/recipe_create.html", new HashMap<>());
   }
   
-  public Map<String, Object> getRecipeListModel(Context ctx) {
-    return model(b -> b.put("allRecipes", recipeRepo(ctx).getAll()));
+  public Map<String, Object> getRecipeListModel(Context ctx, String title, Function<RecipeRepository, Set<RecipeBookEntry>> getRecipes) {
+    return model(b -> b
+        .put("title", title)
+        .put("allRecipes", getRecipes.apply(recipeRepo(ctx)))
+        );
   }
   
   public Map<String, Object> getRecipeEditModel(Context ctx) {

@@ -21,7 +21,6 @@
 
 #macro ( navbar $active $recipeId $ownedByCurrentUser )
 #set ( $navs = {
-"home" : ["Recipe Book", "/", false], 
 "create" : ["New Recipe", "/recipe/new", false],
 "edit" : ["Edit Recipe", "/recipe/$recipeId/edit", true],
 "delete" : ["Delete Recipe", "/recipe/$recipeId/delete", true]
@@ -34,6 +33,17 @@
   
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
    <ul class="navbar-nav mr-auto">
+     <li class="nav-item dropdown#if("home" == $active) active#end">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Recipe Book
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/all">All Recipes</a>
+          <a class="dropdown-item" href="/">My Recipes</a>
+          <a class="dropdown-item" href="/shared">Shared Recipes</a>
+        </div>
+     </li>
+   
      #foreach ( $nav in $navs.entrySet() )
      <li class="nav-item#if($nav.key == $active) active#end">
      	#if(!($recipeId && $ownedByCurrentUser) && $nav.value[2])

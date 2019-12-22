@@ -38,9 +38,17 @@ public class RecipeApp {
       });
       
       path("/", () -> {
-        get(controller::renderRecipeList);
+        get(controller::renderOwnedRecipeList);
       });
-      
+
+      path("/all", () -> {
+        get(controller::renderAllRecipeList);
+      });
+
+      path("/shared", () -> {
+        get(controller::renderSharedRecipeList);
+      });
+
       path("/login", () -> {
         get(loginController::renderLogin);
         post(loginController::handlePost);
