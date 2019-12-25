@@ -2,6 +2,7 @@ package com.kaaphi.recipe.app.renderer;
 
 import com.github.rjeschke.txtmark.Processor;
 import com.kaaphi.recipe.Ingredient;
+import com.kaaphi.recipe.IngredientList;
 import com.kaaphi.recipe.Recipe;
 
 public class RecipeMarkdownProcessor {
@@ -15,15 +16,22 @@ public class RecipeMarkdownProcessor {
         .append("## Ingredients\n")
         ;
     
-    recipe.getIngredients().stream()
-    .map(RecipeMarkdownProcessor::ingredientToMarkdown)
-    .forEach(sb::append);
+    recipe.getIngredientLists()
+    .forEach(il -> ingredientListToMarkdown(sb, il));
     
     sb.append("\n## Method\n");
     
     sb.append(recipe.getMethod());
     
     return sb.toString();
+  }
+  
+  private static void ingredientListToMarkdown(StringBuilder sb, IngredientList list) {
+    list.getName().ifPresent(name -> sb.append("\n### ").append(name).append("\n"));
+    
+    list.getIngredients().stream()
+    .map(RecipeMarkdownProcessor::ingredientToMarkdown)
+    .forEach(sb::append);
   }
   
   private static String ingredientToMarkdown(Ingredient i) {

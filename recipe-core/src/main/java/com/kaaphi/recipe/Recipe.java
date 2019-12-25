@@ -7,13 +7,13 @@ import javax.annotation.Nonnull;
 
 public class Recipe {
   private final String title;
-  private final List<Ingredient> ingredients;
+  private final List<IngredientList> ingredientLists;
   private final String method;
   private final List<String> sources;
   
-  public Recipe(@Nonnull String title, @Nonnull List<Ingredient> ingredients, @Nonnull String method, @Nonnull List<String> sources) {
+  public Recipe(@Nonnull String title, @Nonnull List<IngredientList> ingredientLists, @Nonnull String method, @Nonnull List<String> sources) {
     this.title = title;
-    this.ingredients = ingredients;
+    this.ingredientLists = ingredientLists;
     this.method = method;
     this.sources = sources;
   }
@@ -22,8 +22,8 @@ public class Recipe {
     return title;
   }
 
-  public List<Ingredient> getIngredients() {
-    return Collections.unmodifiableList(ingredients);
+  public List<IngredientList> getIngredientLists() {
+    return Collections.unmodifiableList(ingredientLists);
   }
   
   public List<String> getSources() {
@@ -38,7 +38,7 @@ public class Recipe {
     if(o instanceof Recipe) {
       Recipe that = (Recipe)o;
       return Objects.equals(this.title, that.title)
-          && Objects.equals(this.ingredients, that.ingredients)
+          && Objects.equals(this.ingredientLists, that.ingredientLists)
           && Objects.equals(this.method, that.method)
           && Objects.equals(this.sources, that.sources);
     } else {
@@ -47,7 +47,7 @@ public class Recipe {
   }
   
   public int hashCode() {
-    return Objects.hash(title, ingredients, method, sources);
+    return Objects.hash(title, ingredientLists, method, sources);
   }
   
   public String toString() {

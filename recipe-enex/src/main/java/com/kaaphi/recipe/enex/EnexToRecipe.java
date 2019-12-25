@@ -1,11 +1,5 @@
 package com.kaaphi.recipe.enex;
 
-import com.evernote.enex.EnExport;
-import com.evernote.enex.Note;
-import com.evernote.enex.NoteAttributes;
-import com.kaaphi.recipe.Recipe;
-import com.kaaphi.recipe.RecipeBookEntry;
-import com.kaaphi.recipe.txtformat.IngredientParser;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +29,13 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.SAXException;
+import com.evernote.enex.EnExport;
+import com.evernote.enex.Note;
+import com.evernote.enex.NoteAttributes;
+import com.kaaphi.recipe.IngredientList;
+import com.kaaphi.recipe.Recipe;
+import com.kaaphi.recipe.RecipeBookEntry;
+import com.kaaphi.recipe.txtformat.IngredientParser;
 
 public class EnexToRecipe {
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX");
@@ -55,7 +56,7 @@ public class EnexToRecipe {
     
     Recipe recipe = new Recipe(
         note.getTitle(), 
-        handler.getIngredients().stream().map(ingredientParser::fromString).collect(Collectors.toList()),
+        Collections.singletonList(new IngredientList(null,handler.getIngredients().stream().map(ingredientParser::fromString).collect(Collectors.toList()))),
         handler.getMethod(),
         sources
         );
