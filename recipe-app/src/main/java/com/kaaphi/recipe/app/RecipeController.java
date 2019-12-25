@@ -23,6 +23,7 @@ import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.repo.RecipeRepository.RecipeCategory;
 import com.kaaphi.recipe.txtformat.TextFormat;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
@@ -53,6 +54,11 @@ public class RecipeController {
   
   public void renderSharedRecipeList(Context ctx) {
     ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "Shared Recipes", RecipeRepository::getShared));
+  }
+  
+  public void renderRecipeSearch(Context ctx) {
+    String searchString = ctx.queryParam("q");
+    ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, String.format("\"%s\"", searchString), repo -> repo.searchRecipes(RecipeCategory.ALL, searchString)));
   }
   
   public void renderRecipe(Context ctx) {

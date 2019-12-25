@@ -58,6 +58,10 @@ public class RecipeApp {
           get(loginController::handleLogout);
       });
       
+      path("/search", () -> {
+        get(controller::renderRecipeSearch);
+      });
+      
       path("recipe/new", () -> {
         get(controller::renderNewRecipe);
       });
