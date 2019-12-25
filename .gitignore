@@ -2,6 +2,7 @@
 .project
 .settings
 .classpath
+recipe-db/prod-db/
 /*/bin
 /*/build
 /*/.dbeaver*

@@ -1,39 +1,69 @@
 package com.kaaphi.recipe.txtformat;
 
-import com.kaaphi.recipe.Ingredient;
-import com.kaaphi.recipe.Recipe;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Iterator;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.kaaphi.recipe.Ingredient;
+import com.kaaphi.recipe.IngredientList;
+import com.kaaphi.recipe.Recipe;
 
 public class TextFormat {
   private static final String NEWLINE = "\r\n";
+  private static final IngredientParser ingredientParser = new IngredientParser();
   
   public Recipe fromText(Reader reader) {
-    IngredientParser ingredientParser = new IngredientParser();
     
     BufferedReader in = new BufferedReader(reader);
-    Iterator<String> it = in.lines().iterator();
+    
+    TextIterator it = new TextIterator(in.lines().iterator());
     String title = it.next();
     
+    List<IngredientList> ingredientLists = new LinkedList<>();
     
+    //always at least one ingredient list
+    IngredientList list;
+    boolean isDefault = true;
+    while((list = parseIngredientList(it, isDefault)) != null) {
+      isDefault = false;
+      ingredientLists.add(list);
+    }
     
-    List<Ingredient> ingredients = nextChunk(it)
-    .map(ingredientParser::fromString)
-    .collect(Collectors.toList());
+    String method = it.nextChunk(line -> "SOURCES".equals(line)).collect(Collectors.joining(NEWLINE));
     
-    String method = nextChunks(it, line -> "SOURCES".equals(line)).collect(Collectors.joining(NEWLINE));
-    
-    List<String> sources = nextChunk(it)
+    List<String> sources = it.nextChunk(String::isEmpty)
         .collect(Collectors.toList());
         
-    return new Recipe(title, ingredients, method, sources);
+    return new Recipe(title, ingredientLists, method, sources);
+  }
+  
+  private IngredientList parseIngredientList(TextIterator it, boolean isDefault) {
+    String title;
+
+    String firstLine = it.nextNonEmpty();
+
+    //Titled ingredient list
+    if(firstLine.endsWith(":")) {
+      title = firstLine;
+    } else {
+      it.undoRead();
+      if(isDefault) {
+        title = null;
+      } else {
+        //no more ingredient lists
+        return null;
+      }
+    }
+    
+    List<Ingredient> ingredients = it.nextChunk(String::isEmpty)
+        .map(ingredientParser::fromString)
+        .collect(Collectors.toList());
+    
+    return new IngredientList(title, ingredients);
   }
   
   public Recipe fromText(String text) {
@@ -46,13 +76,20 @@ public class TextFormat {
   
   public void toText(Recipe recipe, Appendable out) throws IOException {
     out.append(recipe.getTitle());
-    out.append(NEWLINE).append(NEWLINE);
-    for(Ingredient i : recipe.getIngredients()) {
-      if(i.getQuantity().isPresent()) {
-        out.append(i.getQuantity().get()).append(" ");
-      }
-      out.append(i.getName());
+    out.append(NEWLINE);
+    for(IngredientList il : recipe.getIngredientLists()) {
       out.append(NEWLINE);
+      if(il.getName().isPresent()) {
+        out.append(il.getName().get());
+        out.append(NEWLINE);
+      }
+      for(Ingredient i : il.getIngredients()) {
+        if(i.getQuantity().isPresent()) {
+          out.append(i.getQuantity().get()).append(" ");
+        }
+        out.append(i.getName());
+        out.append(NEWLINE);
+      }
     }
     out.append(NEWLINE)
     .append(recipe.getMethod())
@@ -74,24 +111,5 @@ public class TextFormat {
       throw new Error(e); //this really shouldn't happen with StringBuilder
     }
     return sb.toString();
-  }
-  
-  private static Stream<String> nextChunk(Iterator<String> it) {
-    return nextChunks(it, String::isEmpty);
-  }
-  
-  
-  private static Stream<String> nextChunks(Iterator<String> it, Predicate<String> until) {
-    String line = null;
-    while(it.hasNext() && (line = it.next()).isEmpty());
-    Stream.Builder<String> builder = Stream.builder();
-    if(line != null) {
-
-      builder.add(line);
-      while(it.hasNext() && !(until.test(line = it.next()))) {
-        builder.add(line);  
-      }
-    }
-    return builder.build();
   }
 }

@@ -21,11 +21,14 @@
   
   <div class="row"><div class="col">
   <h2>Ingredients</h2>
+  #foreach ( $list in $ingredientLists )
+  #if($list.name)<h5>$list.name</h5>#end
   <ul>
-   	#foreach( $ingredient in $ingredients )
+   	#foreach( $ingredient in $list.ingredients )
     <li>$ingredient</li>
 	#end
   </ul>
+  #end
   </div></div>
   
   <div class="row"><div class="col">

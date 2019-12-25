@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import com.kaaphi.recipe.IngredientList;
 import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
@@ -89,17 +90,37 @@ public class RecipeController {
   public Map<String, Object> getRecipeModel(Context ctx) {
     RecipeBookEntry r = recipeRepo(ctx).get(parseUUID(ctx));
     
-    List<String> ingredients = r.getRecipe().getIngredients().stream()
-        .map(i -> i.getQuantity().isPresent() ? String.format("%s %s", i.getQuantity().get(), i.getName()) : i.getName())
+    List<IngredientListModel> ingredientLists = r.getRecipe().getIngredientLists().stream()
+        .map(IngredientListModel::new)
         .collect(Collectors.toList());
     
     return model(b -> b
         .put("recipe", r)
         .put("owner", r.getOwner().getUsername())
         .put("ownedByCurrentUser", r.getOwner().equals(getUser(ctx)))
-        .put("ingredients", ingredients)
+        .put("ingredientLists", ingredientLists)
         .put("method", Processor.process(r.getRecipe().getMethod()))
         );
+  }
+  
+  public static class IngredientListModel {
+    private final String name;
+    private final List<String> ingredients;
+    
+    public IngredientListModel(IngredientList list) {
+      name = list.getName().orElse(null);
+      ingredients = list.getIngredients().stream()
+          .map(i -> i.getQuantity().map(q -> String.format("%s %s", q, i.getName())).orElse(i.getName()))
+          .collect(Collectors.toList());
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public List<String> getIngredients() {
+      return ingredients;
+    }
   }
   
   private static Map<String, Object> model(Consumer<ImmutableMap.Builder<String, Object>> consumer) {
