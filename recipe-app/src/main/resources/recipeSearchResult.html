@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  #head ( $title )
+  <body>
+  #scripts
+  #navbar ( "home", false )
+  <div class="container-fluid">
+  <div class="row mb-5">
+  <div class="col">
+  <form action="/search" method="get" >
+  <div class="form-group">
+    <input class="form-control form-control-lg" type="search" placeholder="Search" #if($searchString)value="$searchString"#end aria-label="Search" name="q" />
+    <select class="form-control form-control-sm" id="scope" name="scope">
+      <option value="ALL" #if($scope=="ALL")selected#end>All Recipes</option>
+      <option value="OWNED" #if($scope=="OWNED")selected#end>My Recipes</option>
+      <option value="SHARED" #if($scope=="SHARED")selected#end>Shared Recipes</option>
+    </select>
+  </div>
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+  </div>
+  </div>
+  
+  <div class="row">
+  <div class="col">
+  #if($searchString && $results.isEmpty())
+    <p>Found 0 results for "$searchString".</p>
+  #end
+  <ul class="list-group">
+    #foreach( $result in $results )
+      #if($result.TitleMatch)
+        <li class="list-group-item"><a href="recipe/$result.Entry.Id">$result.Match.PreContext<strong>$result.Match.Match</strong>$result.Match.PostContext</a></li>
+      #else
+        <li class="list-group-item"><a href="recipe/$result.Entry.Id">$result.Entry.Recipe.Title</a> <small><i>($result.Match.PreContext<strong>$result.Match.Match</strong>$result.Match.PostContext)</i></small></li>
+      #end
+    #end
+  </ul>
+  </div>
+  </div>
+  </div>
+  </body>
+</html>

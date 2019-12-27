@@ -2,7 +2,6 @@ package com.kaaphi.recipe.repo;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -10,8 +9,6 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import com.kaaphi.recipe.Ingredient;
-import com.kaaphi.recipe.IngredientList;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.users.User;
 
@@ -19,7 +16,13 @@ public interface RecipeRepository {
   public static enum RecipeCategory {
     ALL,
     OWNED,
-    SHARED
+    SHARED;
+    
+    public static Optional<RecipeCategory> optionalValueOf(String str) {
+      return str == null ? Optional.empty() : Stream.of(values())
+      .filter(c -> c.name().equals(str))
+      .findAny();
+    }
   }
   
   public Set<RecipeBookEntry> getAll();
@@ -53,37 +56,14 @@ public interface RecipeRepository {
     return filter.map(allRecipeBookEntries::filter).orElse(allRecipeBookEntries);
   }
   
-  public default Set<RecipeBookEntry> searchRecipes(RecipeCategory category, String search) {
-    Predicate<String> searchMatches = s -> s.toLowerCase().contains(search.toLowerCase());
+  public default Set<RecipeSearchResult> searchRecipes(RecipeCategory category, String searchString) {
+    RecipeSearch search = new RecipeSearch(searchString);
     
     return getCategory(category)
-    .map(r -> createRecipeSearchResult(r, searchMatches))
+    .map(search::createResultForRecipe)
     .filter(Objects::nonNull)
     .sorted()
-    .map(RecipeSearchResult::getEntry)
     .collect(Collectors.toCollection(LinkedHashSet::new));    
-  }
-  
-  private static RecipeSearchResult createRecipeSearchResult(RecipeBookEntry entry, Predicate<String> search) {
-    int score = 0;
-    if(search.test(entry.getRecipe().getTitle())) {
-      score += 4;
-    }
-    if (entry.getRecipe().getIngredientLists().stream()
-        .map(IngredientList::getIngredients)
-        .flatMap(List::stream)
-        .map(Ingredient::getName)
-        .anyMatch(search)) {
-      score += 3;
-    }
-    if(search.test(entry.getRecipe().getMethod())) {
-      score += 2;
-    }
-    if(entry.getRecipe().getSources().stream().anyMatch(search)) {
-      score += 1;
-    }
-    
-    return score > 0 ? new RecipeSearchResult(entry, score) : null;
   }
   
   public RecipeBookEntry get(UUID id);
