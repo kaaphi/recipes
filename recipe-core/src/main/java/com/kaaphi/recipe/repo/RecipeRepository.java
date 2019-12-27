@@ -2,13 +2,29 @@ package com.kaaphi.recipe.repo;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.users.User;
 
 public interface RecipeRepository {
+  public static enum RecipeCategory {
+    ALL,
+    OWNED,
+    SHARED;
+    
+    public static Optional<RecipeCategory> optionalValueOf(String str) {
+      return str == null ? Optional.empty() : Stream.of(values())
+      .filter(c -> c.name().equals(str))
+      .findAny();
+    }
+  }
+  
   public Set<RecipeBookEntry> getAll();
   public default Set<RecipeBookEntry> getOwned() {
     return getAll().stream()
@@ -20,6 +36,36 @@ public interface RecipeRepository {
         .filter(r -> !r.getOwner().equals(getUser()))
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
+  public default Stream<RecipeBookEntry> getCategory(RecipeCategory category) {
+    Optional<Predicate<RecipeBookEntry>> filter;
+    switch(category) {
+      case OWNED:
+        filter = Optional.of(r -> r.getOwner().equals(getUser()));
+        break;
+        
+      case SHARED:
+        filter = Optional.of(r -> !r.getOwner().equals(getUser()));
+        break;
+        
+      case ALL:
+      default:
+        filter = Optional.empty();        
+    }
+    
+    Stream<RecipeBookEntry> allRecipeBookEntries = getAll().stream();
+    return filter.map(allRecipeBookEntries::filter).orElse(allRecipeBookEntries);
+  }
+  
+  public default Set<RecipeSearchResult> searchRecipes(RecipeCategory category, String searchString) {
+    RecipeSearch search = new RecipeSearch(searchString);
+    
+    return getCategory(category)
+    .map(search::createResultForRecipe)
+    .filter(Objects::nonNull)
+    .sorted()
+    .collect(Collectors.toCollection(LinkedHashSet::new));    
+  }
+  
   public RecipeBookEntry get(UUID id);
   public default void delete(UUID id) {
     deleteById(Collections.singleton(id));

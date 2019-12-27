@@ -3,9 +3,11 @@ package com.kaaphi.recipe.app;
 import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -23,6 +25,7 @@ import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
+import com.kaaphi.recipe.repo.RecipeRepository.RecipeCategory;
 import com.kaaphi.recipe.txtformat.TextFormat;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
@@ -53,6 +56,25 @@ public class RecipeController {
   
   public void renderSharedRecipeList(Context ctx) {
     ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "Shared Recipes", RecipeRepository::getShared));
+  }
+  
+  public void renderRecipeSearch(Context ctx) {
+    String searchString = ctx.queryParam("q");
+    RecipeCategory scope = RecipeCategory.optionalValueOf(ctx.queryParam("scope")).orElse(RecipeCategory.OWNED);
+    
+    if(searchString != null) {
+      ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
+          .put("title", String.format("%s - Recipes", searchString))
+          .put("searchString", searchString)
+          .put("scope", scope.name())
+          .put("results", recipeRepo(ctx).searchRecipes(scope, searchString))
+          ));
+    } else {
+      ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
+          .put("title", "Recipes")
+          .put("results", Collections.emptySet())
+          ));
+    }
   }
   
   public void renderRecipe(Context ctx) {
