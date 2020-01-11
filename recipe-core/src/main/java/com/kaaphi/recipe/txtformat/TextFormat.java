@@ -34,7 +34,11 @@ public class TextFormat {
     }
     
     String method = it.nextChunk(line -> "SOURCES".equals(line)).collect(Collectors.joining(NEWLINE));
-    
+
+    //skip the SOURCES tag line
+    if(it.hasNext()) {
+      it.next();
+    }
     List<String> sources = it.nextChunk(String::isEmpty)
         .collect(Collectors.toList());
         

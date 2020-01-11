@@ -17,6 +17,9 @@ public class TestTextFormat {
         .append("Mix the butter").append("\n\n")
         .append("and the sugar").append("\n\n")
         .append("together").append("\n\n")
+        .append("SOURCES").append("\n")
+        .append("source1").append("\n")
+        .append("source2").append("\n")
         ;
     
     Recipe r = new TextFormat().fromText(sb.toString());
@@ -25,7 +28,7 @@ public class TestTextFormat {
     assertEquals(1, r.getIngredientLists().size());
     assertEquals(2, r.getIngredientLists().get(0).getIngredients().size());
     assertEquals("Mix the butter\r\n\r\nand the sugar\r\n\r\ntogether\r\n", r.getMethod());
-    
+    assertEquals(Arrays.asList("source1", "source2"), r.getSources());
   }
   
   @Test
