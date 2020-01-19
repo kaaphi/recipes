@@ -48,7 +48,12 @@ public class TextFormat {
   private IngredientList parseIngredientList(TextIterator it, boolean isDefault) {
     String title;
 
-    String firstLine = it.nextNonEmpty();
+    it.skipEmptyLines();
+    if(!it.hasNext()) {
+      return null;
+    }
+
+    String firstLine = it.next();
 
     //Titled ingredient list
     if(firstLine.endsWith(":")) {

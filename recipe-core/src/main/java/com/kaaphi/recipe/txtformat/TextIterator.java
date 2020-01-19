@@ -32,28 +32,33 @@ public class TextIterator {
   }
   
   public boolean hasNext() {
-    return delegate.hasNext();
+    return nextLine != null || delegate.hasNext();
   }
-  
-  public String nextNonEmpty() {
-    lastReadLine = null;
-    while(delegate.hasNext() && next().isEmpty());
-    return lastReadLine;
+
+  public void skipEmptyLines() {
+    while(hasNext()) {
+      if(!next().isEmpty()) {
+        undoRead();
+        break;
+      }
+    }
   }
   
   public Stream<String> nextChunk(Predicate<String> until) {
-    String first = nextNonEmpty();
-    if(first == null) {
+    skipEmptyLines();
+    if(!hasNext()) {
       return Stream.empty();
     }
     
     Stream.Builder<String> builder = Stream.builder();
-    builder.add(first);
-    
-    while(delegate.hasNext() && !(until.test(next()))) {
-        builder.add(lastReadLine);  
+
+    while(hasNext()) {
+      if(until.test(next())) {
+        undoRead();
+        break;
+      }
+      builder.add(lastReadLine);
     }
-    undoRead();
     
     return builder.build();
   }
