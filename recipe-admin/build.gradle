@@ -3,6 +3,6 @@ apply plugin: 'application'
 mainClassName = "com.kaaphi.recipe.admin.Admin"
 
 dependencies {
-    compile project(':recipe-core')
-    compile project(':recipe-app')
+    implementation project(':recipe-core')
+    implementation project(':recipe-app')
 }

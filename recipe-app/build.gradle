@@ -5,11 +5,11 @@ mainClassName = "com.kaaphi.recipe.app.RecipeApp"
 applicationDefaultJvmArgs = ["-Dconfig=/data/config.properties"]
 
 dependencies {
-   	compile project(':recipe-core')
-   	compile project(':recipe-enex')
-   	
-   	compile 'io.javalin:javalin:1.6.0'   	
-	compile group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
-	compile group: 'org.apache.velocity', name: 'velocity', version: '1.7'
-	compile group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
+    implementation project(':recipe-core')
+    implementation project(':recipe-enex')
+
+    implementation 'io.javalin:javalin:1.6.0'
+    implementation group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
+    implementation group: 'org.apache.velocity', name: 'velocity', version: '1.7'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
 }
