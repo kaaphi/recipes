@@ -27,8 +27,9 @@ public class BuildDbScripts extends DefaultTask {
   
     GraphBuilder<String, Depends, ? extends DirectedAcyclicGraph<String, Depends>> builder = DirectedAcyclicGraph.createBuilder(Depends::new);
     
-    Files.list(patchesDir)
-    .forEach(path -> parseDependencies(path, builder));
+    try(Stream<Path> files = Files.list(patchesDir)) {
+      files.forEach(path -> parseDependencies(path, builder));
+    }
     getLogger().info(getPath());
     
     DirectedAcyclicGraph<String, Depends> graph = builder.build();
@@ -37,18 +38,24 @@ public class BuildDbScripts extends DefaultTask {
     Iterable<String> iterable = () -> new TopologicalOrderIterator<>(graph);
     
     System.out.println(graph.toString());
-    
-    List<Path> scripts = Stream.of(
+
+
+    List<Path> scripts;
+    try(Stream<Path> scriptPaths = Stream.of(
         Stream.of(getProject().file("versioning").toPath().resolve("install.versioning.sql")),
         StreamSupport.stream(iterable.spliterator(), false).map(patch -> patchesDir.resolve(patch + ".sql")),
         Files.list(scriptsDir).filter(path -> !Files.isDirectory(path))
         )
-        .flatMap(Function.identity())
-        .collect(Collectors.toList());
-    
+        .flatMap(Function.identity())) {
+
+
+      scripts = scriptPaths.collect(Collectors.toList());
+    }
     Path target = getProject().getBuildDir().toPath().resolve("scripts");
     Files.createDirectories(target);
-    Files.list(target).map(Path::toFile).forEach(File::delete);
+    try(Stream<Path> toClean = Files.list(target)) {
+      toClean.map(Path::toFile).forEach(File::delete);
+    }
   
     int scriptIdx = 0;
     for(Path script : scripts) {
@@ -61,8 +68,8 @@ public class BuildDbScripts extends DefaultTask {
   private static final Pattern PATCH_PATTERN = Pattern.compile("_v.register_patch\\('([^']+)'(,\\s*ARRAY\\s*\\[(.*)\\])?");
   private static final Pattern PATCH_NAME_PATTERN = Pattern.compile("'([^']+)'");
   private void parseDependencies(Path path, GraphBuilder<String, Depends, ? extends DirectedAcyclicGraph<String, Depends>> builder) {
-    try {
-      Files.lines(path)
+    try (Stream<String> lines = Files.lines(path)){
+      lines
       .filter(line -> line.contains("_v.register_patch"))
       .findFirst()
       .ifPresent(line -> {
