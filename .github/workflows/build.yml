@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-      default: 'snapshot'
+      default: "snapshot"
       required: true
 
 jobs:
@@ -32,7 +32,6 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push admin
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -40,7 +39,6 @@ jobs:
           file: ./recipe-admin/Dockerfile
           tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-admin:${{ github.event.inputs.version }}"
       - name: Build and push app
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -48,7 +46,6 @@ jobs:
           file: ./recipe-app/Dockerfile
           tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-app:${{ github.event.inputs.version }}"
       - name: Build and push db
-        id: docker_build
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
