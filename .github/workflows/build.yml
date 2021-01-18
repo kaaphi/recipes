@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-      default: "snapshot"
-      required: true
+        default: "snapshot"
+        required: true
 
 jobs:
   build:
