@@ -1,20 +1,7 @@
 package com.kaaphi.recipe.app;
 
 import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import com.github.rjeschke.txtmark.Processor;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -26,11 +13,25 @@ import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.RecipeRepository.RecipeCategory;
+import com.kaaphi.recipe.repo.RecipeSearchResult;
 import com.kaaphi.recipe.txtformat.TextFormat;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
 import io.javalin.Context;
 import io.javalin.HaltException;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RecipeController {
   private static final Logger log = LoggerFactory.getLogger(RecipeController.class);
@@ -63,12 +64,18 @@ public class RecipeController {
     RecipeCategory scope = RecipeCategory.optionalValueOf(ctx.queryParam("scope")).orElse(RecipeCategory.OWNED);
     
     if(searchString != null) {
-      ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
-          .put("title", String.format("%s - Recipes", searchString))
-          .put("searchString", searchString)
-          .put("scope", scope.name())
-          .put("results", recipeRepo(ctx).searchRecipes(scope, searchString))
-          ));
+      Set<RecipeSearchResult> results = recipeRepo(ctx).searchRecipes(scope, searchString);
+
+      if(results.size() == 1) {
+        ctx.redirect("/recipe/" + results.iterator().next().getEntry().getId());
+      } else {
+        ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
+            .put("title", String.format("%s - Recipes", searchString))
+            .put("searchString", searchString)
+            .put("scope", scope.name())
+            .put("results", results)
+        ));
+      }
     } else {
       ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
           .put("title", "Recipes")
