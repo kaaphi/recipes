@@ -38,6 +38,7 @@ jobs:
           context: ./recipe-admin
           file: ./recipe-admin/Dockerfile
           tags: "registry.kaaphi.com:8443/recipe-admin:${{ github.event.inputs.version }}"
+          push: true
       - name: Build and push app
         uses: docker/build-push-action@v2
         with:
@@ -45,6 +46,7 @@ jobs:
           context: ./recipe-app
           file: ./recipe-app/Dockerfile
           tags: "registry.kaaphi.com:8443/recipe-app:${{ github.event.inputs.version }}"
+          push: true
       - name: Build and push db
         uses: docker/build-push-action@v2
         with:
@@ -52,4 +54,5 @@ jobs:
           context: ./recipe-db
           file: ./recipe-db/Dockerfile
           tags: "registry.kaaphi.com:8443/recipe-db:${{ github.event.inputs.version }}"
+          push: true
           
