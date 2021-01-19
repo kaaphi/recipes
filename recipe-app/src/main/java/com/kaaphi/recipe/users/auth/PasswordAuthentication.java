@@ -1,6 +1,6 @@
 package com.kaaphi.recipe.users.auth;
 
-import io.javalin.Context;
+import io.javalin.http.Context;
 import org.mindrot.jbcrypt.BCrypt;
 
 public abstract class PasswordAuthentication extends AbstractAuthenticationMethod {

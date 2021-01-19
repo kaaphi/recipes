@@ -8,7 +8,7 @@ import com.kaaphi.recipe.users.auth.LongTermAuthPair;
 import com.kaaphi.recipe.users.auth.LongTermAuthPair.LongTermAuthTokenClient;
 import com.kaaphi.recipe.users.auth.LongTermAuthPair.LongTermAuthTokenServer;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
-import io.javalin.Context;
+import io.javalin.http.Context;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

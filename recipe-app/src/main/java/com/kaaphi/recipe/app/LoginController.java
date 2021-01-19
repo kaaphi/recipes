@@ -9,7 +9,7 @@ import com.kaaphi.recipe.users.auth.AuthenticationMethod;
 import com.kaaphi.recipe.users.auth.AuthenticationMethods;
 import com.kaaphi.recipe.users.auth.BasicAuthentication;
 import com.kaaphi.recipe.users.auth.PasswordPostAuthentication;
-import io.javalin.Context;
+import io.javalin.http.Context;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;

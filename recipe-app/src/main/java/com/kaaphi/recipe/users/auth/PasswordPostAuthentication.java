@@ -1,6 +1,6 @@
 package com.kaaphi.recipe.users.auth;
 
-import io.javalin.Context;
+import io.javalin.http.Context;
 
 public class PasswordPostAuthentication extends PasswordAuthentication {
 

@@ -2,7 +2,7 @@ package com.kaaphi.recipe.users.auth;
 
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
-import io.javalin.Context;
+import io.javalin.http.Context;
 
 public interface AuthenticationMethod {
   User authenticate(Context ctx, UserRepository repo);

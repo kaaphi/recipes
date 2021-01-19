@@ -22,8 +22,8 @@ import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
 import io.javalin.Javalin;
-import io.javalin.rendering.JavalinRenderer;
-import io.javalin.rendering.template.JavalinVelocity;
+import io.javalin.plugin.rendering.JavalinRenderer;
+import io.javalin.plugin.rendering.template.JavalinVelocity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -87,12 +87,11 @@ public class RecipeModule extends AbstractModule {
   Javalin provideJavalin(VelocityEngine engine) {
     JavalinRenderer.register(JavalinVelocity.INSTANCE, ".vm", ".html");
     JavalinVelocity.configure(engine);
-    return Javalin.create()
+    return Javalin.create(config -> config
         .requestLogger((ctx, ms) -> {
           log.info("{} {} ms", ctx.contextPath(), ms);
         })
-        .enableStaticFiles("/static")
-        .port(7000);
+        .addStaticFiles("/static"));
   }
   
   @Provides

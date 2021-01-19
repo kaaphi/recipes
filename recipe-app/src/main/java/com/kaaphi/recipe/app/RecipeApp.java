@@ -9,6 +9,7 @@ import static io.javalin.apibuilder.ApiBuilder.put;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 import com.kaaphi.recipe.module.ProductionRecipeModule;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
@@ -19,10 +20,12 @@ public class RecipeApp {
 
   
   private final Javalin app;
+  private final int listenPort;
     
   @Inject
-  public RecipeApp(Javalin app, RecipeController controller, LoginController loginController) {
+  public RecipeApp(Javalin app, RecipeController controller, LoginController loginController, @Named("listenPort") String listenPort) {
     this.app = app;
+    this.listenPort = Integer.parseInt(listenPort);
     
     app.before(loginController::validateLoggedIn);
     
@@ -85,7 +88,7 @@ public class RecipeApp {
   }
   
   public void start() {
-    app.start();   
+    app.start(listenPort);
     log.info("App started.");
   }
   
