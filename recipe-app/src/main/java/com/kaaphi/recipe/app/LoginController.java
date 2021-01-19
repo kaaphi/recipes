@@ -44,7 +44,7 @@ public class LoginController {
       User user = longTermAuthController.validateLongTermAuth(ctx);
       if(user != null) {
         ctx.sessionAttribute(CURRENT_USER, user);
-      } else if(ctx.basicAuthCredentials() != null) {
+      } else if(ctx.basicAuthCredentialsExist()) {
         log.trace("Doing basic auth.");
         if(!doAuth(new BasicAuthentication(), ctx)) {
           ctx.res.sendError(401);
