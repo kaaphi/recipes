@@ -17,8 +17,10 @@ import com.kaaphi.recipe.repo.RecipeSearchResult;
 import com.kaaphi.recipe.txtformat.TextFormat;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
+import io.javalin.BadRequestResponse;
 import io.javalin.Context;
-import io.javalin.HaltException;
+import io.javalin.NotFoundResponse;
+import io.javalin.UnauthorizedResponse;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,15 +50,15 @@ public class RecipeController {
   }
   
   public void renderAllRecipeList(Context ctx) {
-	  ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "All Recipes", RecipeRepository::getAll));
+	  ctx.render("/recipeList.html", getRecipeListModel(ctx, "All Recipes", RecipeRepository::getAll));
   }
   
   public void renderOwnedRecipeList(Context ctx) {
-    ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "My Recipes", RecipeRepository::getOwned));
+    ctx.render("/recipeList.html", getRecipeListModel(ctx, "My Recipes", RecipeRepository::getOwned));
   }
   
   public void renderSharedRecipeList(Context ctx) {
-    ctx.renderVelocity("/recipeList.html", getRecipeListModel(ctx, "Shared Recipes", RecipeRepository::getShared));
+    ctx.render("/recipeList.html", getRecipeListModel(ctx, "Shared Recipes", RecipeRepository::getShared));
   }
   
   public void renderRecipeSearch(Context ctx) {
@@ -69,7 +71,7 @@ public class RecipeController {
       if(results.size() == 1) {
         ctx.redirect("/recipe/" + results.iterator().next().getEntry().getId());
       } else {
-        ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
+        ctx.render("/recipeSearchResult.html", model(b -> b
             .put("title", String.format("%s - Recipes", searchString))
             .put("searchString", searchString)
             .put("scope", scope.name())
@@ -77,7 +79,7 @@ public class RecipeController {
         ));
       }
     } else {
-      ctx.renderVelocity("/recipeSearchResult.html", model(b -> b
+      ctx.render("/recipeSearchResult.html", model(b -> b
           .put("title", "Recipes")
           .put("results", Collections.emptySet())
           ));
@@ -85,19 +87,19 @@ public class RecipeController {
   }
   
   public void renderRecipe(Context ctx) {
-	  ctx.renderVelocity("/recipe.html", getRecipeModel(ctx));
+	  ctx.render("/recipe.html", getRecipeModel(ctx));
   }
   
   public void renderEditRecipe(Context ctx) {
-	  ctx.renderVelocity("/recipe_edit.html", getRecipeEditModel(ctx));
+	  ctx.render("/recipe_edit.html", getRecipeEditModel(ctx));
   }
   
   public void renderDeleteRecipe(Context ctx) {
-    ctx.renderVelocity("/recipe_delete.html", getRecipeEditModel(ctx));
+    ctx.render("/recipe_delete.html", getRecipeEditModel(ctx));
   }
   
   public void renderNewRecipe(Context ctx) {
-    ctx.renderVelocity("/recipe_create.html", new HashMap<>());
+    ctx.render("/recipe_create.html", new HashMap<>());
   }
   
   public Map<String, Object> getRecipeListModel(Context ctx, String title, Function<RecipeRepository, Set<RecipeBookEntry>> getRecipes) {
@@ -202,7 +204,7 @@ public class RecipeController {
       switch(ctx.contentType()) {
         case "text/plain" : return txtFormat.fromText(ctx.body());
         case "application/json" : return gson.fromJson(ctx.body(), Recipe.class);
-        default: throw new HaltException(400);
+        default: throw new BadRequestResponse();
       }
   }
   
@@ -245,14 +247,14 @@ public class RecipeController {
   private static User getUser(Context ctx) {
     User user = ctx.sessionAttribute(CURRENT_USER);
     if(user == null) {
-      throw new HaltException(401);
+      throw new UnauthorizedResponse();
     } else {
       return user;
     }
   }
   
   private static UUID parseUUID(Context ctx) {
-    return parseUUID(ctx.param("id"));
+    return parseUUID(ctx.pathParam("id"));
   }
   
   private static UUID parseUUID(String id) {
@@ -260,7 +262,7 @@ public class RecipeController {
       return UUID.fromString(id);
     } catch (NumberFormatException e) {
       log.debug("No recipe for id <{}>", id);
-      throw new HaltException(404, "Not found");
+      throw new NotFoundResponse();
     }
   }
 }

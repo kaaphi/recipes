@@ -1,6 +1,7 @@
 package com.kaaphi.recipe.app;
 
 import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
+
 import com.google.inject.Inject;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
@@ -28,7 +29,7 @@ public class LoginController {
   }
   
   public void renderLogin(Context ctx) {
-    ctx.renderVelocity("/login.html", new HashMap<>());
+    ctx.render("/login.html", new HashMap<>());
   }
   
   public void validateLoggedIn(Context ctx) throws IOException {
@@ -46,7 +47,7 @@ public class LoginController {
       } else if(ctx.basicAuthCredentials() != null) {
         log.trace("Doing basic auth.");
         if(!doAuth(new BasicAuthentication(), ctx)) {
-          ctx.response().sendError(401);
+          ctx.res.sendError(401);
         }
       } else if(!"/login".equals(ctx.path())) {      
         ctx.redirect("/login");
@@ -60,7 +61,7 @@ public class LoginController {
   }
   
   public void handleLogout(Context ctx) {
-    ctx.request().getSession().removeAttribute(CURRENT_USER);
+    ctx.req.getSession().removeAttribute(CURRENT_USER);
     longTermAuthController.removeExisingSession(ctx);
     ctx.redirect("/login");
   }
@@ -73,7 +74,7 @@ public class LoginController {
     if(doAuth(authType, ctx)) {
       ctx.redirect("/", 303);
     } else {
-      ctx.response().sendError(401);
+      ctx.res.sendError(401);
     }
   }
   

@@ -9,11 +9,11 @@ import com.kaaphi.recipe.users.auth.LongTermAuthPair.LongTermAuthTokenClient;
 import com.kaaphi.recipe.users.auth.LongTermAuthPair.LongTermAuthTokenServer;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import io.javalin.Context;
-import io.javalin.builder.CookieBuilder;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
+import javax.servlet.http.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,19 +75,19 @@ public class LongTermAuthController {
   }
   
   private void clearCookie(Context ctx) {
-    ctx.cookie(CookieBuilder.cookieBuilder(REMEMBER_TOKEN, "")
-        .httpOnly(true)
-        //TODO secure(true)
-        .maxAge(0)
-        );
+    ctx.cookie(createRememberTokenCookie(0, ""));
   }
   
   private void writeNewToken(LongTermAuthPair pair, Context ctx) {
     repo.saveServerToken(pair.getServer());
-    ctx.cookie(CookieBuilder.cookieBuilder(REMEMBER_TOKEN, pair.getClient().toString())
-        .maxAge(Math.toIntExact(Instant.now().until(pair.getServer().getExpires(), ChronoUnit.SECONDS)))
-        .httpOnly(true)
-        //TODO .secure(true)
-        );
+    ctx.cookie(createRememberTokenCookie(Math.toIntExact(Instant.now().until(pair.getServer().getExpires(), ChronoUnit.SECONDS)), pair.getClient().toString()));
+  }
+
+  private static Cookie createRememberTokenCookie(int maxAge, String value) {
+    Cookie cookie = new Cookie(REMEMBER_TOKEN, value);
+    cookie.setHttpOnly(true);
+    cookie.setMaxAge(maxAge);
+    //TODO cookie.setSecure(true);
+    return cookie;
   }
 }

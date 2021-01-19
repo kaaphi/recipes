@@ -1,20 +1,5 @@
 package com.kaaphi.recipe.module;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.Properties;
-import javax.sql.DataSource;
-import org.apache.velocity.app.VelocityEngine;
-import org.postgresql.ds.PGSimpleDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -37,7 +22,23 @@ import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
 import io.javalin.Javalin;
-import io.javalin.translator.template.JavalinVelocityPlugin;
+import io.javalin.rendering.JavalinRenderer;
+import io.javalin.rendering.template.JavalinVelocity;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.Properties;
+import javax.sql.DataSource;
+import org.apache.velocity.app.VelocityEngine;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RecipeModule extends AbstractModule {
   private static final Logger log = LoggerFactory.getLogger(RecipeModule.class);
@@ -84,11 +85,14 @@ public class RecipeModule extends AbstractModule {
     
   @Provides
   Javalin provideJavalin(VelocityEngine engine) {
-    JavalinVelocityPlugin.configure(engine);    
+    JavalinRenderer.register(JavalinVelocity.INSTANCE, ".vm", ".html");
+    JavalinVelocity.configure(engine);
     return Javalin.create()
-        .enableStandardRequestLogging()
+        .requestLogger((ctx, ms) -> {
+          log.info("{} {} ms", ctx.contextPath(), ms);
+        })
         .enableStaticFiles("/static")
-        .port(7000);        
+        .port(7000);
   }
   
   @Provides

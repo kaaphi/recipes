@@ -1,10 +1,11 @@
 package com.kaaphi.recipe.app;
 
-import static io.javalin.ApiBuilder.delete;
-import static io.javalin.ApiBuilder.get;
-import static io.javalin.ApiBuilder.path;
-import static io.javalin.ApiBuilder.post;
-import static io.javalin.ApiBuilder.put;
+import static io.javalin.apibuilder.ApiBuilder.delete;
+import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.put;
+
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
