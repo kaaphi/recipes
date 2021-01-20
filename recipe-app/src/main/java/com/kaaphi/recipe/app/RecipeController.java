@@ -70,7 +70,8 @@ public class RecipeController {
     if(searchString != null) {
       Set<RecipeSearchResult> results = recipeRepo(ctx).searchRecipes(scope, searchString);
 
-      if(results.size() == 1) {
+      if(results.size() == 1 && results.iterator().next().isTitleMatch()) {
+        //if we only matched one thing and it was by title, just redirect to the recipe instead
         ctx.redirect("/recipe/" + results.iterator().next().getEntry().getId());
       } else {
         ctx.render("/recipeSearchResult.html", model(b -> b
