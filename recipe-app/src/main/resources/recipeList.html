@@ -6,11 +6,23 @@
   #navbar ( "home", false )
   <div class="container-fluid">
   <h1>$title</h1>
+  <nav aria-label="Alpha navigation">
+    <ul class="pagination flex-wrap ">
+    #foreach ( $letter in $allRecipes.keySet() )
+      <li class="page-item alphanav"><a class="page-link" href="#letter_$letter">$letter</a></li>
+    #end
+    </ul>
+  </nav>
+  #foreach ( $entry in $allRecipes.entrySet() )
+  <div class="mt-4">
+  <h5><a id="letter_$entry.Key">$entry.Key</a></h5>
   <ul class="list-group">
-   	#foreach( $recipe in $allRecipes )
+   	#foreach( $recipe in $entry.Value )
     <li class="list-group-item"><a href="recipe/$recipe.Id">$recipe.Recipe.Title</a></li>
-	#end
+    #end
   </ul>
+  </div>
+  #end
   </div>
   </body>
 </html>

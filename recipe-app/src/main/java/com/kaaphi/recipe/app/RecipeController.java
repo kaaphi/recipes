@@ -25,6 +25,8 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,9 +105,17 @@ public class RecipeController {
   }
   
   public Map<String, Object> getRecipeListModel(Context ctx, String title, Function<RecipeRepository, Set<RecipeBookEntry>> getRecipes) {
+    //build a map of starting character to list of recipes with a title starting with that character
+    Map<String, Set<RecipeBookEntry>> entries = getRecipes.apply(recipeRepo(ctx)).stream()
+        .collect(Collectors.toMap(
+            r -> r.getRecipe().getTitle().toUpperCase().substring(0,1),
+            r -> new LinkedHashSet<>(Collections.singleton(r)),
+            (a,b) -> {a.addAll(b); return a;},
+            LinkedHashMap::new));
+
     return model(b -> b
         .put("title", title)
-        .put("allRecipes", getRecipes.apply(recipeRepo(ctx)))
+        .put("allRecipes", entries)
         );
   }
   
