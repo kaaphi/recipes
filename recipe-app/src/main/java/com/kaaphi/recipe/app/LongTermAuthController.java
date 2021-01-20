@@ -25,12 +25,14 @@ public class LongTermAuthController {
   private UserRepository userRepo;
   private LongTermAuthRepository repo;
   private TemporalAmount expiration;
-  
+  private final boolean secureCookies;
+
   @Inject
-  public LongTermAuthController(LongTermAuthRepository repo, UserRepository userRepo, @Named("longTermAuthExpireDays") String expireDays) {
+  public LongTermAuthController(LongTermAuthRepository repo, UserRepository userRepo, @Named("longTermAuthExpireDays") String expireDays, @Named("secureCookies") String secureCookies) {
     this.repo = repo;
     this.userRepo = userRepo;
     expiration = Duration.ofDays(Long.parseLong(expireDays));
+    this.secureCookies =Boolean.parseBoolean(secureCookies);
   }
   
   public User validateLongTermAuth(Context ctx) {
@@ -83,11 +85,11 @@ public class LongTermAuthController {
     ctx.cookie(createRememberTokenCookie(Math.toIntExact(Instant.now().until(pair.getServer().getExpires(), ChronoUnit.SECONDS)), pair.getClient().toString()));
   }
 
-  private static Cookie createRememberTokenCookie(int maxAge, String value) {
+  private Cookie createRememberTokenCookie(int maxAge, String value) {
     Cookie cookie = new Cookie(REMEMBER_TOKEN, value);
     cookie.setHttpOnly(true);
     cookie.setMaxAge(maxAge);
-    //TODO cookie.setSecure(true);
+    cookie.setSecure(secureCookies);
     return cookie;
   }
 }

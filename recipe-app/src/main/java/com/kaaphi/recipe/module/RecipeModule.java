@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.velocity.app.VelocityEngine;
+import org.eclipse.jetty.server.session.SessionHandler;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,14 +85,21 @@ public class RecipeModule extends AbstractModule {
   }
     
   @Provides
-  Javalin provideJavalin(VelocityEngine engine) {
+  Javalin provideJavalin(VelocityEngine engine, @Named("secureCookies") String secureCookies) {
     JavalinRenderer.register(JavalinVelocity.INSTANCE, ".vm", ".html");
     JavalinVelocity.configure(engine);
     return Javalin.create(config -> config
         .requestLogger((ctx, ms) -> {
           log.info("{} {} ms", ctx.path(), ms);
         })
-        .addStaticFiles("/static"));
+        .addStaticFiles("/static")
+        .sessionHandler(() -> {
+          SessionHandler sh = new SessionHandler();
+          sh.getSessionCookieConfig().setHttpOnly(true);
+          sh.getSessionCookieConfig().setSecure(Boolean.parseBoolean(secureCookies));
+          return sh;
+        })
+    );
   }
   
   @Provides
