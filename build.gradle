@@ -19,8 +19,8 @@ subprojects {
     	implementation 'org.slf4j:slf4j-api:1.7.25'
 
         implementation 'com.google.code.gson:gson:2.8.2'
-        implementation 'com.google.inject:guice:4.2.2'
-        implementation 'com.google.inject.extensions:guice-assistedinject:4.2.2'
+        implementation 'com.google.inject:guice:4.2.3'
+        implementation 'com.google.inject.extensions:guice-assistedinject:4.2.3'
         implementation 'com.google.guava:guava:24.1-jre'
 
 		runtimeOnly group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
