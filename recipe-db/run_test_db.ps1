@@ -4,6 +4,11 @@ Param (
     [string]$BackupPath = "test-data"
 )
 
+Write-Host "Building Scripts"
+cd ..
+.\gradlew.bat recipe-db:build
+cd recipe-db
+
 Write-Host "Stopping and removing container if necessary."
 docker container stop test-recipe-db
 docker container rm test-recipe-db
