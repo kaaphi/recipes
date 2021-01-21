@@ -1,9 +1,9 @@
 package com.kaaphi.recipe.users;
 
+import com.kaaphi.recipe.users.auth.AuthenticationMethod;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import com.kaaphi.recipe.users.auth.AuthenticationMethod;
 
 public class AuthenticatableUser {
   private final User user;
@@ -11,6 +11,10 @@ public class AuthenticatableUser {
   
   public AuthenticatableUser(String username, String authDetailsType, String authDetailValue) {
     this(new User(username), Collections.singletonMap(authDetailsType, authDetailValue));
+  }
+
+  public AuthenticatableUser(User user, String authDetailsType, String authDetailValue) {
+    this(user, Collections.singletonMap(authDetailsType, authDetailValue));
   }
   
   public AuthenticatableUser(User user, Map<String,String> authDetails) {

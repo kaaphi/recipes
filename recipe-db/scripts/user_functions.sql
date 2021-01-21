@@ -46,4 +46,13 @@ RETURNS VOID AS $$
 	DELETE FROM ShareRecipes WHERE fromUserId = in_fromId AND toUserId = in_toId
 $$ LANGUAGE sql;
 
+DROP FUNCTION IF EXISTS getUserRoles;
+CREATE OR REPLACE FUNCTION getUserRoles ( IN in_id INTEGER )
+RETURNS TABLE ( role VARCHAR(64) ) AS $$
+	SELECT r.role
+	FROM UserRolesForUser ur
+	JOIN UserRoles r ON ur.roleId = r.id
+	WHERE ur.userId = in_id
+$$ LANGUAGE sql;
+
 COMMIT;

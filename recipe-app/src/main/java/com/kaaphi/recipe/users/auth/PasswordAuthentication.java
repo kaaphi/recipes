@@ -12,16 +12,19 @@ public abstract class PasswordAuthentication extends AbstractAuthenticationMetho
   }
 
   @Override
-  public String generateNewUserAuthenticationDetails(Context ctx) {
-    return generateNewDetails(getPassword(ctx));
+  protected String generateNewAuthenticationDetails(Context ctx) {
+    return generateNewDetails(getNewPassword(ctx));
   }
-  
+
   @Override
   public String getDetailsType() {
     return PASSWORD_TYPE;
   }
 
   protected abstract String getPassword(Context ctx);
+  protected String getNewPassword(Context ctx) {
+    throw new UnsupportedOperationException();
+  }
 
   public static boolean authenticate(String hashedPassword, String password) {
     return BCrypt.checkpw(password, hashedPassword);

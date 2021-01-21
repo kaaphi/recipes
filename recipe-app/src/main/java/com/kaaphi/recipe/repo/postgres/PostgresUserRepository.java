@@ -1,17 +1,21 @@
 package com.kaaphi.recipe.repo.postgres;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import javax.sql.DataSource;
 import com.google.inject.Inject;
 import com.kaaphi.recipe.repo.RecipeRepositoryException;
 import com.kaaphi.recipe.users.AuthenticatableUser;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
+import com.kaaphi.recipe.users.UserRole;
 import com.kaaphi.recipe.users.UserShare;
 import com.kaaphi.recipe.users.auth.PasswordAuthentication;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import javax.sql.DataSource;
 
 public class PostgresUserRepository extends AbstractPostgresRepository implements UserRepository {
 
@@ -35,7 +39,7 @@ public class PostgresUserRepository extends AbstractPostgresRepository implement
   
   @Override
   public User getUserByUsername(String username) {
-    return getAuthenticatableUser(username).getUser();
+    return Optional.ofNullable(getAuthenticatableUser(username)).map(AuthenticatableUser::getUser).orElse(null);
   }
 
   @Override
@@ -140,7 +144,23 @@ public class PostgresUserRepository extends AbstractPostgresRepository implement
       stmt.setInt(2, toUser.getId());
     });
   }
-  
+
+  @Override
+  public Set<UserRole> getRolesForUser(User user) {
+    DbUser dbUser = getDbUser(user);
+    return executeQuery("SELECT role FROM getUserRoles(?)",
+        stmt -> {
+          stmt.setInt(1, dbUser.getId());
+        },
+        rs -> {
+          Set<UserRole> roles = new HashSet<>();
+          while(rs.next()) {
+            roles.add(UserRole.valueOf(rs.getString(1)));
+          }
+          return roles;
+        });
+  }
+
   private DbUser getDbUser(User user) {
     if(user instanceof DbUser) {
       return (DbUser) user;

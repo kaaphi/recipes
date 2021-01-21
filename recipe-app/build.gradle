@@ -12,4 +12,5 @@ dependencies {
     implementation group: 'com.github.rjeschke', name: 'txtmark', version: '0.13'
     implementation group: 'org.apache.velocity', name: 'velocity', version: '1.7'
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.1'
 }

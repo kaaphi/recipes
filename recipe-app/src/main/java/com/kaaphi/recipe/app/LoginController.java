@@ -1,18 +1,22 @@
 package com.kaaphi.recipe.app;
 
+import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_ROLES;
 import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
 
 import com.google.inject.Inject;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
+import com.kaaphi.recipe.users.UserRole;
 import com.kaaphi.recipe.users.auth.AuthenticationMethod;
 import com.kaaphi.recipe.users.auth.AuthenticationMethods;
 import com.kaaphi.recipe.users.auth.BasicAuthentication;
 import com.kaaphi.recipe.users.auth.PasswordPostAuthentication;
+import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,34 +33,46 @@ public class LoginController {
   }
   
   public void renderLogin(Context ctx) {
-    ctx.render("/login.html", new HashMap<>());
-  }
-  
-  public void validateLoggedIn(Context ctx) throws IOException {
-    //always allow static resources
-    if(!"/".equals(ctx.path()) && ClassLoader.getSystemResource("static" + ctx.path()) != null) {
-      return;
+    if(ctx.sessionAttribute(CURRENT_USER) != null) {
+      //already logged in, redirect to root
+      ctx.redirect("/");
+    } else {
+      ctx.render("/login.html", new HashMap<>());
     }
-    
-    if(ctx.sessionAttribute(CURRENT_USER) == null) {
+  }
+
+  public boolean validateLoggedIn(Context ctx, Set<Role> permittedRoles) throws IOException {
+    final boolean userIsLoggedIn;
+
+    //always allow empty set or anonymous, early return
+    if(permittedRoles.isEmpty() || permittedRoles.contains(UserRole.ANONYMOUS)) {
+      return true;
+    }
+    else if(ctx.sessionAttribute(CURRENT_USER) != null) {
+      //already logged in
+      userIsLoggedIn = true;
+    }
+    else {
       log.trace("No logged in user. Path {} Matched Path {}", ctx.path(), ctx.matchedPath());
       //check for long-term auth token
       User user = longTermAuthController.validateLongTermAuth(ctx);
       if(user != null) {
-        ctx.sessionAttribute(CURRENT_USER, user);
+        cacheUserAndRolesInSession(user, ctx);
+        userIsLoggedIn = true;
       } else if(ctx.basicAuthCredentialsExist()) {
         log.trace("Doing basic auth.");
-        if(!doAuth(new BasicAuthentication(), ctx)) {
-          ctx.res.sendError(401);
-        }
-      } else if(!"/login".equals(ctx.path())) {      
-        ctx.redirect("/login");
+        userIsLoggedIn = doAuth(new BasicAuthentication(), ctx);
+      } else {
+        userIsLoggedIn = false;
       }
     }
-    
-    if(ctx.sessionAttribute(CURRENT_USER) != null && "/login".equals(ctx.path())) {
-      //logged in now, redirect to main page
-      ctx.redirect("/");
+
+    if(userIsLoggedIn) {
+      //check roles
+      Set<Role> userRoles = ctx.sessionAttribute(CURRENT_ROLES);
+      return userRoles.stream().anyMatch(permittedRoles::contains);
+    } else {
+      return false;
     }
   }
   
@@ -80,14 +96,19 @@ public class LoginController {
   
   private boolean doAuth(AuthenticationMethod method, Context ctx) throws IOException {
     User user = method.authenticate(ctx, repo);
-    
+
     if(user == null) {
       return false;
     } else {
-      ctx.sessionAttribute(CURRENT_USER, user);
+      cacheUserAndRolesInSession(user, ctx);
       longTermAuthController.saveNewSession(user, ctx);
       return true;
     }
+  }
+
+  private void cacheUserAndRolesInSession(User user, Context ctx) {
+    ctx.sessionAttribute(CURRENT_USER, user);
+    ctx.sessionAttribute(CURRENT_ROLES, repo.getRolesForUser(user));
   }
 
 }

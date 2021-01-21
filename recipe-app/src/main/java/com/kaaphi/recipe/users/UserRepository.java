@@ -2,6 +2,7 @@ package com.kaaphi.recipe.users;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface UserRepository {
   public List<User> getAll();
@@ -14,4 +15,5 @@ public interface UserRepository {
   public List<UserShare> getSharesForUser(User user);
   public void addUserShare(UserShare share);  
   public void deleteUserShare(UserShare share);
+  Set<UserRole> getRolesForUser(User user);
 }

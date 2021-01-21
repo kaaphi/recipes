@@ -14,4 +14,6 @@ public class PasswordPostAuthentication extends PasswordAuthentication {
     return ctx.formParam("password");
   }
 
+  @Override
+  protected String getNewPassword(Context ctx) { return ctx.formParam("newPassword"); }
 }
