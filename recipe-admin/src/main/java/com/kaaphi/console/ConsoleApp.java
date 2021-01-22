@@ -1,9 +1,11 @@
 package com.kaaphi.console;
 
-import java.io.PrintStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -13,12 +15,22 @@ import javax.annotation.Nullable;
 public class ConsoleApp {
   private final CommandContext baseContext;
   private final Map<Class<? extends Object>, Object> instances;
+  private final ConsoleIO io;
     
   public <T> ConsoleApp(Object...objects) {
     instances = new HashMap<>();    
     baseContext = new CommandContext(new CommandToken("{base}"));
+    io = getIo();
     
     Stream.of(objects).forEach(this::loadCommands);
+  }
+
+  public static ConsoleIO getIo() {
+    if(System.console() != null) {
+      return new SystemConsoleIO(System.console());
+    } else {
+      return new StandardConsoleIO();
+    }
   }
   
   private void loadCommands(Object obj) {
@@ -61,18 +73,24 @@ public class ConsoleApp {
     }
 
     @Override
-    public void run(PrintStream out, String rawArgs) throws Throwable {
+    public void run(ConsoleIO io, String rawArgs) throws Throwable {
       String[] stringArgs = numArgs > 0 && !rawArgs.isEmpty() ? 
           rawArgs.split("\\s+", numArgs) : new String[0];
 
       Object[] args = new Object[numArgs + 1];
-      args[0] = out;
-      System.arraycopy(stringArgs, 0, args, 1, stringArgs.length);
-      
-      for(int i = stringArgs.length+1; i < method.getParameterCount(); i++) {
-        if(method.getParameters()[i].getAnnotation(Nullable.class) == null) {
-          out.println("Not enough arguments!");
-          return;
+      args[0] = io.writer();
+      for(int i = 1, stringArgsIdx = 0; i < method.getParameterCount(); i++) {
+        if(method.getParameters()[i].getAnnotation(Confidential.class) != null) {
+          args[i] = readConfidential(io, method.getParameters()[i]);
+        } else if(stringArgsIdx >= stringArgs.length) {
+          if(method.getParameters()[i].getAnnotation(Nullable.class) == null) {
+            io.writer().println("Not enough arguments!");
+            return;
+          } else {
+            args[i] = null;
+          }
+        } else {
+          args[i] = stringArgs[stringArgsIdx++];
         }
       }
 
@@ -82,13 +100,25 @@ public class ConsoleApp {
         throw e.getCause();
       }
     }
+
+    private String readConfidential(ConsoleIO io, Parameter p) throws IOException {
+      char[] confidential = io.readPassword("Enter %s: ", p.getName());
+      char[] confirm = io.readPassword("Confirm %s: ", p.getName());
+      if(!Arrays.equals(confidential, confirm)) {
+        throw new IOException("Did not match!");
+      } else {
+        return new String(confidential);
+      }
+    }
     
-    public void showHelp(PrintStream out) {
+    public void showHelp(PrintWriter out) {
       out.print(cmd);
       for(int i = 1; i < method.getParameterCount(); i++) {
         Parameter p = method.getParameters()[i];
         out.print(' ');
-        if(p.getAnnotation(Nullable.class) == null) {
+        if(p.getAnnotation(Confidential.class) != null) {
+          //skip
+        } else if(p.getAnnotation(Nullable.class) == null) {
           out.print(p.getName());
         } else {
           out.print('[');
@@ -107,7 +137,7 @@ public class ConsoleApp {
   
   private Command getCommand(Class<?> cls, Method m) {
     Parameter[] params = m.getParameters();
-    if(!PrintStream.class.isAssignableFrom(params[0].getType())) {
+    if(!PrintWriter.class.isAssignableFrom(params[0].getType())) {
       throw new IllegalArgumentException(String.format("First parameter of method %s must be a PrintStream!", m));
     }
     
@@ -134,7 +164,8 @@ public class ConsoleApp {
   }
   
   private boolean command(Scanner in) throws Throwable {
-    System.out.print("> ");
+    io.writer().print("> ");
+    io.writer().flush();
     while(!in.hasNextLine());
     if(in.hasNextLine()) {
       String commandLine = in.nextLine();
@@ -147,11 +178,11 @@ public class ConsoleApp {
         return false;
       }
 
-      baseContext.run(System.out, commandLine);
+      baseContext.run(io, commandLine);
       
       return true;
     } else {
-      System.out.println("Exiting...");
+      io.writer().println("Exiting...");
       return false;
     }
   }

@@ -1,6 +1,6 @@
 package com.kaaphi.console;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +37,8 @@ public class CommandContext {
     subContexts.put(context.getName(), context);
   }
   
-  public void run(PrintStream out, String rawCommandString) throws Throwable {
+  public void run(ConsoleIO io, String rawCommandString) throws Throwable {
+    PrintWriter out = io.writer();
     String[] split = rawCommandString.split("\\s+", 2);
     CommandToken token = new CommandToken(split[0]);
     String rawArgString = split.length == 2 ? split[1] : "";
@@ -48,16 +49,16 @@ public class CommandContext {
       CommandContext context = subContexts.get(token);
       Command cmd = commands.get(token);
       if(context != null) {
-        context.run(out, rawArgString);
+        context.run(io, rawArgString);
       } else if(cmd != null) {
-        cmd.run(System.out, rawArgString);
+        cmd.run(io, rawArgString);
       } else {
         System.out.println("Command does not exist!");
       }
     }
   }
   
-  public void help(PrintStream out, @Nullable String command) {
+  public void help(PrintWriter out, @Nullable String command) {
     if(command != null && !command.isEmpty()) {
       CommandToken token = new CommandToken(command);
             

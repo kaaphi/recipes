@@ -4,7 +4,8 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.kaaphi.console.ConsoleApp;
-import com.kaaphi.recipe.module.ProductionRecipeModule;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class Admin {
   private final ConsoleApp console;
@@ -19,8 +20,17 @@ public class Admin {
   }
   
   public static void main(String[] args) {
-    Injector injector = Guice.createInjector(ProductionRecipeModule.getProductionModule());
-    
-    injector.getInstance(Admin.class).run();
+    Injector injector = Guice.createInjector(new AdminModule());
+    AdminConfig config = injector.getInstance(AdminConfig.class);
+
+    try {
+      config.setBaseUri(new URI(args[0]));
+      config.setUser(args[1]);
+      config.setPassword(ConsoleApp.getIo().readPassword("Password for %s: ", config.getUser()));
+
+      injector.getInstance(Admin.class).run();
+    } catch (URISyntaxException e) {
+      System.err.println(e);
+    }
   }
 }

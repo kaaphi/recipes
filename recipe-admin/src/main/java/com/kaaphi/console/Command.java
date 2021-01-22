@@ -1,9 +1,9 @@
 package com.kaaphi.console;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 
 public interface Command {
-  void run(PrintStream out, String rawArgs) throws Throwable;
-  void showHelp(PrintStream out);
+  void run(ConsoleIO id, String rawArgs) throws Throwable;
+  void showHelp(PrintWriter out);
   CommandToken getCommandName();
 }
