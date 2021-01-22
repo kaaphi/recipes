@@ -3,7 +3,14 @@ BEGIN;
 DROP FUNCTION IF EXISTS addUser;
 CREATE OR REPLACE FUNCTION addUser ( IN in_username VARCHAR(256), IN in_password TEXT )
 RETURNS INTEGER AS $$
-	INSERT INTO Users (username, password) VALUES (in_username, in_password) RETURNING id;
+	WITH userRow AS (
+		INSERT INTO Users (username, password) VALUES (in_username, in_password) RETURNING id
+	)
+	, roleInsert AS (
+		INSERT INTO UserRolesForUser (userId, roleId)
+			SELECT userRow.id, (SELECT UserRoles.id FROM UserRoles WHERE UserRoles.role = 'USER') FROM userRow
+	)
+	SELECT id FROM userRow;
 $$ LANGUAGE sql;
 
 DROP FUNCTION IF EXISTS updateUser;

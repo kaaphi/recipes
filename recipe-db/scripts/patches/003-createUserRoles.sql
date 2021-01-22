@@ -2,6 +2,8 @@ BEGIN;
 SELECT _v.register_patch('003-createUserRoles', ARRAY ['000-createUsers']);
 CREATE TABLE UserRoles (id SERIAL PRIMARY KEY, role VARCHAR(64) UNIQUE);
 
+CREATE INDEX UserRoles_role ON UserRoles (role, id);
+
 CREATE TABLE UserRolesForUser (
   id SERIAL PRIMARY KEY,
   userId INTEGER REFERENCES Users (id) NOT NULL,
