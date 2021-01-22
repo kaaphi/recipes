@@ -1,4 +1,4 @@
-package com.kaaphi.recipe.app.admin;
+package com.kaaphi.recipe.admin;
 
 import com.kaaphi.recipe.users.User;
 

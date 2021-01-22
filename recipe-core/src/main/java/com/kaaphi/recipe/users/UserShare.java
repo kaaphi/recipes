@@ -1,9 +1,12 @@
 package com.kaaphi.recipe.users;
 
 public class UserShare {
-  private final User fromUser;
-  private final User toUser;
-  
+  private User fromUser;
+  private User toUser;
+
+  //needed for jackson
+  private UserShare() {}
+
   public UserShare(User fromUser, User toUser) {
     this.fromUser = fromUser;
     this.toUser = toUser;

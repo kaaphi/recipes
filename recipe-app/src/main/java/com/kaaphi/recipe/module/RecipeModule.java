@@ -90,7 +90,7 @@ public class RecipeModule extends AbstractModule {
     JavalinVelocity.configure(engine);
     return Javalin.create(config -> config
         .requestLogger((ctx, ms) -> {
-          log.info("{} {} ms", ctx.path(), ms);
+          log.info("{} {} {} {} ms", ctx.method(), ctx.path(), ctx.status(), ms);
         })
         .addStaticFiles("/static")
         .sessionHandler(() -> {

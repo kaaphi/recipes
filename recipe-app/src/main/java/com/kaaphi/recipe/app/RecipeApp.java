@@ -31,18 +31,7 @@ public class RecipeApp {
   public RecipeApp(Javalin app, RecipeController controller, LoginController loginController, UserController userController, @Named("listenPort") String listenPort) {
     this.app = app;
     this.listenPort = Integer.parseInt(listenPort);
-    app.config.accessManager((handler, ctx, permittedRoles) -> {
-      //if there are no roles, then the resource is available to anyone
-      if(loginController.validateLoggedIn(ctx, permittedRoles)) {
-        handler.handle(ctx);
-      } else if (ctx.path().startsWith("/api")) {
-        throw new UnauthorizedResponse();
-      } else {
-        //redirect to login
-        ctx.redirect("/login");
-      }
-    });
-    //app.before(loginController::validateLoggedIn);
+    app.config.accessManager(loginController::accessManager);
     
     app.routes(() -> {
       path(Path.RECIPE_API, () -> {
@@ -57,11 +46,12 @@ public class RecipeApp {
       });
 
       crud(Path.USER_API, userController, roles(UserRole.ADMIN));
+      put(Path.USER_API + "/password", userController::changePassword, roles(UserRole.ADMIN));
       path(Path.USER_SHARE_API, () -> {
-        get(prefixPath(":username"), userController::getShares, roles(UserRole.ADMIN));
+        get(":username", userController::getShares, roles(UserRole.ADMIN));
         path(":fromUsername/:toUsername", () -> {
           post(userController::addShare, roles(UserRole.ADMIN));
-          delete(userController::addShare, roles(UserRole.ADMIN));
+          delete(userController::deleteShare, roles(UserRole.ADMIN));
         });
       });
       

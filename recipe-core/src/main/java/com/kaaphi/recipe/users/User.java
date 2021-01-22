@@ -3,7 +3,10 @@ package com.kaaphi.recipe.users;
 import java.util.Objects;
 
 public class User {
-  private final String username;
+  private String username;
+
+  //needed for Jackson
+  private User() {};
 
   public User(String username) {
     this.username = username;
@@ -12,7 +15,9 @@ public class User {
   public String getUsername() {
     return username;
   }
-  
+
+
+
   @Override
   public int hashCode() {
     return Objects.hash(username);

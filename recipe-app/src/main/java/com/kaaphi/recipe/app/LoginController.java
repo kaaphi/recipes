@@ -13,6 +13,9 @@ import com.kaaphi.recipe.users.auth.BasicAuthentication;
 import com.kaaphi.recipe.users.auth.PasswordPostAuthentication;
 import io.javalin.core.security.Role;
 import io.javalin.http.Context;
+import io.javalin.http.ForbiddenResponse;
+import io.javalin.http.Handler;
+import io.javalin.http.UnauthorizedResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
@@ -41,12 +44,14 @@ public class LoginController {
     }
   }
 
-  public boolean validateLoggedIn(Context ctx, Set<Role> permittedRoles) throws IOException {
+  public void accessManager(Handler handler, Context ctx, Set<Role> permittedRoles)
+      throws Exception {
     final boolean userIsLoggedIn;
 
     //always allow empty set or anonymous, early return
     if(permittedRoles.isEmpty() || permittedRoles.contains(UserRole.ANONYMOUS)) {
-      return true;
+      handler.handle(ctx);
+      return;
     }
     else if(ctx.sessionAttribute(CURRENT_USER) != null) {
       //already logged in
@@ -70,9 +75,16 @@ public class LoginController {
     if(userIsLoggedIn) {
       //check roles
       Set<Role> userRoles = ctx.sessionAttribute(CURRENT_ROLES);
-      return userRoles.stream().anyMatch(permittedRoles::contains);
+      if(userRoles.stream().anyMatch(permittedRoles::contains)) {
+        handler.handle(ctx);
+      } else {
+        throw new ForbiddenResponse();
+      }
+    } else if(ctx.path().startsWith("/api")) {
+      throw new UnauthorizedResponse();
     } else {
-      return false;
+      //redirect to login
+      ctx.redirect("/login");
     }
   }
   

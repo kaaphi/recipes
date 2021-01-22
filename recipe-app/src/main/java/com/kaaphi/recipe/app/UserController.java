@@ -1,7 +1,7 @@
 package com.kaaphi.recipe.app;
 
 import com.google.inject.Inject;
-import com.kaaphi.recipe.app.admin.NewUserRequest;
+import com.kaaphi.recipe.admin.NewUserRequest;
 import com.kaaphi.recipe.users.AuthenticatableUser;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
@@ -9,6 +9,7 @@ import com.kaaphi.recipe.users.UserShare;
 import com.kaaphi.recipe.users.auth.PasswordAuthentication;
 import io.javalin.apibuilder.CrudHandler;
 import io.javalin.http.Context;
+import io.javalin.http.NotFoundResponse;
 import java.util.Collections;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,7 +63,10 @@ public class UserController implements CrudHandler {
   }
 
   public void changePassword(@NotNull Context context) {
-    User user = userRepo.getUserByUsername(context.pathParam("username"));
+    User user = userRepo.getUserByUsername(context.pathParam("id"));
+    if(user == null) {
+      throw new NotFoundResponse();
+    }
     userRepo.setAuthDetails(user, Collections.singletonMap(PasswordAuthentication.PASSWORD_TYPE, PasswordAuthentication.generateNewDetails(context.body())));
   }
 }
