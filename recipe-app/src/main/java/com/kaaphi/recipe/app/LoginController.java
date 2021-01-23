@@ -44,6 +44,11 @@ public class LoginController {
     }
   }
 
+  public void renderChangePassword(Context ctx) {
+    ctx.render("/change_password.html", new HashMap<>());
+  }
+
+
   public void accessManager(Handler handler, Context ctx, Set<Role> permittedRoles)
       throws Exception {
     final boolean userIsLoggedIn;
@@ -104,6 +109,16 @@ public class LoginController {
     } else {
       ctx.res.sendError(401);
     }
+  }
+
+  public void handlePasswordChange(Context ctx) throws IOException {
+    AuthenticationMethod authType = Optional.ofNullable(ctx.formParam("method"))
+        .map(AuthenticationMethods::getAuthenticationMethod)
+        .orElse(new PasswordPostAuthentication());
+
+    authType.updateAuthenticationDetails(ctx, repo);
+
+    ctx.redirect("/", 303);
   }
   
   private boolean doAuth(AuthenticationMethod method, Context ctx) throws IOException {

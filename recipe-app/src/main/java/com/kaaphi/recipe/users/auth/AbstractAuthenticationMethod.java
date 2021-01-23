@@ -7,28 +7,15 @@ import com.kaaphi.recipe.users.UserRepository;
 import io.javalin.http.Context;
 import io.javalin.http.UnauthorizedResponse;
 import java.util.Collections;
-import java.util.function.Function;
 
 public abstract class AbstractAuthenticationMethod implements AuthenticationMethod {
 
   @Override
   public User authenticate(Context ctx, UserRepository repo) {
-    AuthenticatableUser user = repo.getAuthenticatableUser(getUsername(ctx));
-    
-    if(user == null) {
-      return null;
-    }
-    
-    String authDetails = user.getAuthDetails(this);
-    
-    if(authDetails != null && authenticate(authDetails, ctx)) {
-      return user.getUser();
-    } else {
-      return null;
-    }
+    return authenticate(ctx, repo, getUsername(ctx));
   }
 
-  private User authenticate(Context ctx, UserRepository repo, Function<Context, String> usernameFunction) {
+  private User authenticate(Context ctx, UserRepository repo, String username) {
     AuthenticatableUser user = repo.getAuthenticatableUser(getUsername(ctx));
 
     if(user == null) {
@@ -46,8 +33,9 @@ public abstract class AbstractAuthenticationMethod implements AuthenticationMeth
 
   @Override
   public void updateAuthenticationDetails(Context ctx, UserRepository repo) {
-    User validateAuthentication = authenticate(ctx, repo, c -> c.<User>sessionAttribute(SessionAttributes.CURRENT_USER).getUsername());
-    if(validateAuthentication == null) {
+    User currentUser = ctx.sessionAttribute(SessionAttributes.CURRENT_USER);
+    User validateAuthentication = authenticate(ctx, repo, currentUser.getUsername());
+    if(!currentUser.equals(validateAuthentication)) {
       throw new UnauthorizedResponse();
     }
 

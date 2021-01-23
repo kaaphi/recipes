@@ -5,7 +5,6 @@ import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
-import static io.javalin.apibuilder.ApiBuilder.prefixPath;
 import static io.javalin.apibuilder.ApiBuilder.put;
 import static io.javalin.core.security.SecurityUtil.roles;
 
@@ -16,7 +15,6 @@ import com.google.inject.name.Named;
 import com.kaaphi.recipe.module.ProductionRecipeModule;
 import com.kaaphi.recipe.users.UserRole;
 import io.javalin.Javalin;
-import io.javalin.http.UnauthorizedResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +68,11 @@ public class RecipeApp {
       path("/login", () -> {
         get(loginController::renderLogin);
         post(loginController::handlePost);
+      });
+
+      path("/changePassword", () -> {
+        get(loginController::renderChangePassword);
+        post(loginController::handlePasswordChange);
       });
       
       path("/logout", () -> {

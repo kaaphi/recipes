@@ -14,10 +14,12 @@ import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.kaaphi.recipe.app.SessionAttributes;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.postgres.PostgresRecipeRepository;
 import com.kaaphi.recipe.repo.postgres.PostgresUserRepository;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
+import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -87,6 +90,11 @@ public class RecipeModule extends AbstractModule {
   @Provides
   Javalin provideJavalin(VelocityEngine engine, @Named("secureCookies") String secureCookies) {
     JavalinRenderer.register(JavalinVelocity.INSTANCE, ".vm", ".html");
+    JavalinRenderer.baseModelFunction = ctx -> Optional.ofNullable(ctx.<User>sessionAttribute(SessionAttributes.CURRENT_USER))
+        .map(User::getUsername)
+        .map(username -> Collections.singletonMap("username",  username))
+        .orElse(Collections.emptyMap());
+
     JavalinVelocity.configure(engine);
     return Javalin.create(config -> config
         .requestLogger((ctx, ms) -> {
