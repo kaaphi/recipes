@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.HttpHost;
 
 public class AdminModule extends AbstractModule {
 
@@ -29,12 +27,8 @@ public class AdminModule extends AbstractModule {
 
   @Provides @Singleton
   HttpClientContext provideHttpClientContext(AdminConfig config) {
-    BasicScheme basicAuth = new BasicScheme();
-    basicAuth.initPreemptive(new UsernamePasswordCredentials(config.getUser(), config.getPassword()));
-    HttpHost target = new HttpHost(config.getBaseUri().getScheme(), config.getBaseUri().getHost(), config.getBaseUri().getPort());
-
     HttpClientContext localContext = HttpClientContext.create();
-    localContext.resetAuthExchange(target, basicAuth);
+    localContext.setCookieStore(new BasicCookieStore());
     return localContext;
   }
 

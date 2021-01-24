@@ -13,13 +13,16 @@ import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.impl.classic.AbstractHttpClientResponseHandler;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 
 public class RecipeApiClient {
   private final AdminConfig config;
@@ -35,6 +38,21 @@ public class RecipeApiClient {
     this.clientProvider = clientProvider;
     this.clientContext = clientContext;
     this.objectMapper = objectMapper;
+  }
+
+  public void authorize() throws IOException {
+    ClassicHttpRequest login = ClassicRequestBuilder.post()
+        .setUri(config.getBaseUri().resolve("/login"))
+        .addParameter("username", config.getUser())
+        .addParameter("password", new String(config.getPassword()))
+        .build();
+    try(CloseableHttpClient client = clientProvider.get();
+        CloseableHttpResponse resp = client.execute(login, clientContext)) {
+      EntityUtils.consume(resp.getEntity());
+      if(resp.getCode() != HttpStatus.SC_OK) {
+        throw new IOException("Not authorized!");
+      }
+    }
   }
 
   public <T> T get(String path, TypeReference<T> type) throws IOException {

@@ -19,7 +19,7 @@ public class Admin {
     console.run();
   }
   
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     Injector injector = Guice.createInjector(new AdminModule());
     AdminConfig config = injector.getInstance(AdminConfig.class);
 
@@ -27,6 +27,8 @@ public class Admin {
       config.setBaseUri(new URI(args[0]));
       config.setUser(args[1]);
       config.setPassword(ConsoleApp.getIo().readPassword("Password for %s: ", config.getUser()));
+
+      injector.getInstance(RecipeApiClient.class).authorize();
 
       injector.getInstance(Admin.class).run();
     } catch (URISyntaxException e) {
