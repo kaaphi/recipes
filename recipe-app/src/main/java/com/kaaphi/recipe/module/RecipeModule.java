@@ -24,6 +24,7 @@ import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
 import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
 import io.javalin.plugin.rendering.JavalinRenderer;
 import io.javalin.plugin.rendering.template.JavalinVelocity;
 import java.io.IOException;
@@ -98,7 +99,7 @@ public class RecipeModule extends AbstractModule {
     JavalinVelocity.configure(engine);
     return Javalin.create(config -> config
         .requestLogger((ctx, ms) -> {
-          log.info("{} {} {} {} ms", ctx.method(), ctx.path(), ctx.status(), ms);
+          log.info("{} {} {} {} ms", ctx.method(), ctx.status(), getRequestPathLogFormat(ctx), ms);
         })
         .addStaticFiles("/static")
         .sessionHandler(() -> {
@@ -108,6 +109,14 @@ public class RecipeModule extends AbstractModule {
           return sh;
         })
     );
+  }
+
+  private static String getRequestPathLogFormat(Context ctx) {
+    if(ctx.queryString() != null) {
+      return ctx.path() + "?" + ctx.queryString();
+    } else {
+      return ctx.path();
+    }
   }
   
   @Provides
