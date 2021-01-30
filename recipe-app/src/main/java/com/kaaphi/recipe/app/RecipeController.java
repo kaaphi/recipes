@@ -176,8 +176,15 @@ public class RecipeController {
     
     StringBuilder sb = new StringBuilder();
     gson.toJson(recipes, new TypeToken<Collection<RecipeBookEntry>>(){}.getType(), sb);
-    
+
     ctx.result(sb.toString());    
+  }
+
+  public void readAllRecipeNames(Context ctx) {
+    ctx.json(recipeRepo(ctx).getAll().stream()
+        .map(RecipeBookEntry::getRecipe)
+        .map(Recipe::getTitle)
+        .collect(Collectors.toList()));
   }
   
   public void readRecipe(Context ctx) {

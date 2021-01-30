@@ -32,6 +32,8 @@ public class RecipeApp {
     app.config.accessManager(loginController::accessManager);
     
     app.routes(() -> {
+      get("/api/recipeNames", controller::readAllRecipeNames, roles(UserRole.USER));
+
       path(Path.RECIPE_API, () -> {
         get(controller::readAllRecipes, roles(UserRole.USER));
         post(controller::createRecipe, roles(UserRole.USER));
