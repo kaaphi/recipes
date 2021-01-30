@@ -29,10 +29,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,11 +182,21 @@ public class RecipeController {
     ctx.result(sb.toString());    
   }
 
-  public void readAllRecipeNames(Context ctx) {
+  public void readRecipeNames(Context ctx) {
+    Predicate<String> predicate = Optional.of(ctx.queryParam("q"))
+        .map(RecipeController::makeQueryPredicate)
+        .orElse(str -> true);
+
     ctx.json(recipeRepo(ctx).getAll().stream()
         .map(RecipeBookEntry::getRecipe)
         .map(Recipe::getTitle)
+        .filter(predicate)
         .collect(Collectors.toList()));
+  }
+
+  private static Predicate<String> makeQueryPredicate(String query) {
+    final String finalQuery = query.toLowerCase();
+    return str -> str.toLowerCase().contains(finalQuery);
   }
   
   public void readRecipe(Context ctx) {

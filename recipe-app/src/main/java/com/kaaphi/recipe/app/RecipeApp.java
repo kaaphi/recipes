@@ -32,7 +32,7 @@ public class RecipeApp {
     app.config.accessManager(loginController::accessManager);
     
     app.routes(() -> {
-      get("/api/recipeNames", controller::readAllRecipeNames, roles(UserRole.USER));
+      get("/api/recipeNames", controller::readRecipeNames, roles(UserRole.USER));
 
       path(Path.RECIPE_API, () -> {
         get(controller::readAllRecipes, roles(UserRole.USER));
