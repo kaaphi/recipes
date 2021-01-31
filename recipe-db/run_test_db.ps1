@@ -1,5 +1,6 @@
 Param (
     [switch]$RebuildDB = $false,
+    [switch]$NoBackupRestore = $false,
     [string]$Network = "recipe-net",
     [string]$BackupPath = "test-data"
 )
@@ -18,6 +19,11 @@ if($RebuildDB) {
   docker volume rm recipes_test_db
 }
 
+$BackupMount = "--mount type=bind,source=$(Resolve-Path $BackupPath),target=/docker-entrypoint-initdb.d"
+if($NoBackupRestore) {
+    $BackupMount = ""
+}
+
 Write-Host "Starting container."
 docker run `
 --name test-recipe-db `
@@ -26,7 +32,7 @@ docker run `
 -e POSTGRES_PASSWORD=mysecretpassword `
 --network="$Network" `
 --mount type=volume,source=recipes_test_db,target=/var/lib/postgresql/data `
---mount type=bind,source=$(Resolve-Path $BackupPath),target=/docker-entrypoint-initdb.d `
+$BackupMount `
 --mount type=bind,source=$(Resolve-Path build\scripts),target=/dbscripts `
 postgres:10.4-alpine
 
