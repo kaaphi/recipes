@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -65,9 +66,10 @@ public class RecipeController {
   public void renderRecipeSearch(Context ctx) {
     String searchString = ctx.queryParam("q");
     RecipeCategory scope = RecipeCategory.optionalValueOf(ctx.queryParam("scope")).orElse(RecipeCategory.OWNED);
+    boolean includeArchive = Optional.ofNullable(ctx.queryParam("includeArchive")).map(Boolean::valueOf).orElse(false);
     
     if(searchString != null) {
-      Set<RecipeSearchResult> results = recipeRepo(ctx).searchRecipes(scope, searchString);
+      Set<RecipeSearchResult> results = recipeRepo(ctx).searchRecipes(scope, includeArchive, searchString);
 
       if(results.size() == 1 && results.iterator().next().isTitleMatch()) {
         //if we only matched one thing and it was by title, just redirect to the recipe instead
@@ -205,7 +207,7 @@ public class RecipeController {
     } else if(!current.getOwner().equals(user)) {
       ctx.status(401);
     } else {
-      RecipeBookEntry entry = new RecipeBookEntry(id, recipe, current.getCreated(), Instant.now(), user);
+      RecipeBookEntry entry = new RecipeBookEntry(id, recipe, current.getCreated(), Instant.now(), user, current.isArchived());
       repo.save(entry);
     }
   }
@@ -221,7 +223,7 @@ public class RecipeController {
   public void createRecipe(Context ctx) {
     Recipe recipe = parseRecipe(ctx);
     
-    RecipeBookEntry entry = new RecipeBookEntry(UUID.randomUUID(), recipe, Instant.now(), null, getUser(ctx));
+    RecipeBookEntry entry = new RecipeBookEntry(UUID.randomUUID(), recipe, Instant.now(), null, getUser(ctx), false);
     
     recipeRepo(ctx).save(entry);
     

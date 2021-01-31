@@ -1,15 +1,5 @@
 package com.kaaphi.recipe.repo.postgres;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.sql.DataSource;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
@@ -20,6 +10,16 @@ import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.postgres.PostgresUserRepository.DbUser;
 import com.kaaphi.recipe.users.User;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.sql.DataSource;
 
 public class PostgresRecipeRepository extends AbstractPostgresRepository
     implements RecipeRepository {
@@ -40,14 +40,19 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
   }
 
   @Override
-  public Set<RecipeBookEntry> getAll() {
-    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime, username FROM getAllRecipes(?)", stmt -> stmt.setInt(1, user.getId()), this::getRecipeBookEntryFromResultSet)
+  public Set<RecipeBookEntry> getAll(boolean includeArchive) {
+    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime, username, isArchived FROM getAllRecipes(?, ?)",
+        stmt -> {
+          stmt.setInt(1, user.getId());
+          stmt.setBoolean(2, includeArchive);
+        },
+        this::getRecipeBookEntryFromResultSet)
     .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
   public RecipeBookEntry get(UUID id) {
-    return executeQuery("SELECT id, recipe, createdTime, updatedTime, username FROM getRecipe(?, ?)", 
+    return executeQuery("SELECT id, recipe, createdTime, updatedTime, username, isArchived FROM getRecipe(?, ?)",
         stmt -> {
           stmt.setInt(1, user.getId());
           stmt.setObject(2, id);
@@ -62,7 +67,7 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
   }
   
   private RecipeBookEntry getRecipeBookEntryFromResultSet(ResultSet rs) throws JsonSyntaxException, SQLException {
-    return new RecipeBookEntry((UUID)rs.getObject(1), gson.fromJson(rs.getString(2), Recipe.class), toInstant(rs.getTimestamp(3)), toInstant(rs.getTimestamp(4)), new User(rs.getString(5)));
+    return new RecipeBookEntry((UUID)rs.getObject(1), gson.fromJson(rs.getString(2), Recipe.class), toInstant(rs.getTimestamp(3)), toInstant(rs.getTimestamp(4)), new User(rs.getString(5)), rs.getBoolean(6));
   }
   
   private static Instant toInstant(Timestamp ts) {
@@ -90,7 +95,22 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
       stmt.setObject(3, gson.toJson(recipe.getRecipe()));
     });
   }
-  
-  
 
+  @Override
+  public void archiveById(Set<UUID> toArchive) {
+    doArchive(true, toArchive);
+  }
+
+  @Override
+  public void unarchiveById(Set<UUID> toUnarchive) {
+    doArchive(false, toUnarchive);
+  }
+
+  private void doArchive(boolean isArchive, Set<UUID> toArchive) {
+    executeCall("archiveRecipes(?, ?, ?)", stmt -> {
+      stmt.setInt(1, user.getId());
+      stmt.setArray(2,stmt.getConnection().createArrayOf("UUID", toArchive.toArray()) );
+      stmt.setBoolean(3, isArchive);
+    });
+  }
 }

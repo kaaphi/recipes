@@ -1,5 +1,12 @@
 package com.kaaphi.recipe.enex;
 
+import com.evernote.enex.EnExport;
+import com.evernote.enex.Note;
+import com.evernote.enex.NoteAttributes;
+import com.kaaphi.recipe.IngredientList;
+import com.kaaphi.recipe.Recipe;
+import com.kaaphi.recipe.RecipeBookEntry;
+import com.kaaphi.recipe.txtformat.IngredientParser;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -29,13 +36,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 import org.xml.sax.SAXException;
-import com.evernote.enex.EnExport;
-import com.evernote.enex.Note;
-import com.evernote.enex.NoteAttributes;
-import com.kaaphi.recipe.IngredientList;
-import com.kaaphi.recipe.Recipe;
-import com.kaaphi.recipe.RecipeBookEntry;
-import com.kaaphi.recipe.txtformat.IngredientParser;
 
 public class EnexToRecipe {
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX");
@@ -64,7 +64,7 @@ public class EnexToRecipe {
     Instant created = parseInstant(note.getCreated(), Instant::now);
     Instant updated = parseInstant(note.getUpdated(), () -> null);
    
-    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated, null);
+    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated, null, false);
   }
 
   private List<String> getSources(Note note) {
@@ -94,7 +94,7 @@ public class EnexToRecipe {
     Instant created = parseInstant(note.getCreated(), Instant::now);
     Instant updated = parseInstant(note.getUpdated(), () -> null);
    
-    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated, null);
+    return new RecipeBookEntry(UUID.randomUUID(), recipe, created, updated, null, false);
   }
   
   public EnExport loadExport(File file) throws JAXBException, XMLStreamException {

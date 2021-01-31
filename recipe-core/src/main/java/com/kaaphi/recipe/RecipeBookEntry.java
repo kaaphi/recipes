@@ -1,9 +1,9 @@
 package com.kaaphi.recipe;
 
+import com.kaaphi.recipe.users.User;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
-import com.kaaphi.recipe.users.User;
 
 public class RecipeBookEntry {
   private final UUID id;
@@ -11,13 +11,16 @@ public class RecipeBookEntry {
   private final Instant created;
   private final Instant updated;
   private final User owner;
-  public RecipeBookEntry(UUID id, Recipe recipe, Instant created, Instant updated, User owner) {
+  private final boolean isArchived;
+
+  public RecipeBookEntry(UUID id, Recipe recipe, Instant created, Instant updated, User owner, boolean isArchived) {
     super();
     this.id = id;
     this.recipe = recipe;
     this.created = created;
     this.updated = updated;
     this.owner = owner;
+    this.isArchived = isArchived;
   }
   public UUID getId() {
     return id;
@@ -34,21 +37,26 @@ public class RecipeBookEntry {
   public User getOwner() {
     return owner;
   }
+  public boolean isArchived() {
+    return isArchived;
+  }
+
+  @Override
   public boolean equals(Object o) {
-    if(o instanceof RecipeBookEntry) {
-      RecipeBookEntry that = (RecipeBookEntry)o;
-      return Objects.equals(this.id, that.id)
-          && Objects.equals(this.recipe, that.recipe)
-          && Objects.equals(this.created, that.created)
-          && Objects.equals(this.updated, that.updated);
-    } else {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    RecipeBookEntry that = (RecipeBookEntry) o;
+    return isArchived == that.isArchived && id.equals(that.id) && recipe.equals(that.recipe)
+        && created.equals(that.created) && Objects.equals(updated, that.updated) && owner
+        .equals(that.owner);
   }
-  
+
+  @Override
   public int hashCode() {
-    return Objects.hash(id, recipe, created, updated);
+    return Objects.hash(id, recipe, created, updated, owner, isArchived);
   }
-  
-  
 }

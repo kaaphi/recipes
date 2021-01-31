@@ -46,7 +46,7 @@ public class RepoTestHelper {
 
   public static RecipeBookEntry createBasicRecipeBookEntry(UUID id, User user, String recipeName) {
     return new RecipeBookEntry(id, new Recipe(recipeName, Collections.emptyList(), "", Collections.emptyList()),
-        Instant.now(), Instant.now(), user);
+        Instant.now(), Instant.now(), user, false);
   }
 
   public UserRepository getUserRepo() {

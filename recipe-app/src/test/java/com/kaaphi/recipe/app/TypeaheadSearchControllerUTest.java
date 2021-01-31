@@ -41,6 +41,6 @@ public class TypeaheadSearchControllerUTest {
   private void setUpRepo(Stream<String> recipeTitles) {
     when(repo.getAll()).thenReturn(recipeTitles
     .map(title -> new RecipeBookEntry(UUID.randomUUID(), new Recipe(title, Collections.emptyList(), "", Collections.emptyList()), Instant
-        .now(), Instant.now(), null)).collect(Collectors.toSet()));
+        .now(), Instant.now(), null, false)).collect(Collectors.toSet()));
   }
 }

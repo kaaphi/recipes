@@ -1,6 +1,8 @@
 package com.kaaphi.recipe.repo;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.kaaphi.recipe.Ingredient;
 import com.kaaphi.recipe.IngredientList;
@@ -27,6 +29,10 @@ import org.junit.Test;
 
 public class RecipeRepoITest {
   private static RepoTestHelper helper;
+  private static final Recipe BASIC_TEST_RECIPE = new Recipe("MyTestRecipe",
+      Arrays.asList(new IngredientList(null, Arrays.asList(new Ingredient("My Ingredient")))),
+      "The recipe method.",
+      Arrays.asList("Source1", "Source2"));
 
   private User user1;
   private User user2;
@@ -59,15 +65,11 @@ public class RecipeRepoITest {
 
   @Test
   public void addAndGetRecipe() {
-    Recipe recipe = new Recipe("MyTestRecipe",
-        Arrays.asList(new IngredientList(null, Arrays.asList(new Ingredient("My Ingredient")))),
-        "The recipe method.",
-        Arrays.asList("Source1", "Source2"));
     lastId = UUID.randomUUID();
 
-    user1Repo.save(new RecipeBookEntry(lastId, recipe, Instant.now(), Instant.now(), user1));
+    user1Repo.save(new RecipeBookEntry(lastId, BASIC_TEST_RECIPE, Instant.now(), Instant.now(), user1, false));
 
-    assertEquals(recipe, user1Repo.get(lastId).getRecipe());
+    assertEquals(BASIC_TEST_RECIPE, user1Repo.get(lastId).getRecipe());
   }
 
   @Test
@@ -79,9 +81,33 @@ public class RecipeRepoITest {
         "The recipe method has be modified.",
         Arrays.asList("Only Source"));
 
-    user1Repo.save(new RecipeBookEntry(lastId, recipe, Instant.now(), Instant.now(), user1));
+    user1Repo.save(new RecipeBookEntry(lastId, recipe, Instant.now(), Instant.now(), user1, false));
 
     assertEquals(recipe, user1Repo.get(lastId).getRecipe());
+  }
+
+  @Test
+  public void archiveRecipe() {
+    addAndGetRecipe();
+
+    user1Repo.archiveById(Collections.singleton(lastId));
+
+    assertTrue(user1Repo.get(lastId).isArchived());
+
+    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getAll(true).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+    assertEquals(Collections.emptySet(), user1Repo.getAll(false).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+  }
+
+  @Test
+  public void unarchiveRecipe() {
+    archiveRecipe();
+
+    user1Repo.unarchiveById(Collections.singleton(lastId));
+
+    assertFalse(user1Repo.get(lastId).isArchived());
+
+    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getAll(true).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getAll(false).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
   }
 
   @Test
