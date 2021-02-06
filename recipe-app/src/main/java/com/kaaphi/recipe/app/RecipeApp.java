@@ -26,13 +26,13 @@ public class RecipeApp {
   private final int listenPort;
     
   @Inject
-  public RecipeApp(Javalin app, RecipeController controller, LoginController loginController, UserController userController, @Named("listenPort") String listenPort) {
+  public RecipeApp(Javalin app, RecipeController controller, LoginController loginController, UserController userController, TypeaheadSearchController typeaheadSearchController, @Named("listenPort") String listenPort) {
     this.app = app;
     this.listenPort = Integer.parseInt(listenPort);
     app.config.accessManager(loginController::accessManager);
     
     app.routes(() -> {
-      get("/api/recipeNames", controller::readRecipeNames, roles(UserRole.USER));
+      get("/api/recipeTitles", typeaheadSearchController::readRecipeTitles, roles(UserRole.USER));
 
       path(Path.RECIPE_API, () -> {
         get(controller::readAllRecipes, roles(UserRole.USER));

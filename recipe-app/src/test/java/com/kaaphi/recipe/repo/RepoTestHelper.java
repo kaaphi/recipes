@@ -40,11 +40,11 @@ public class RepoTestHelper {
     return recipeRepositoryFactory.createRepository(user);
   }
 
-  public RecipeBookEntry createBasicRecipeBookEntry(User user, String recipeName) {
+  public static RecipeBookEntry createBasicRecipeBookEntry(User user, String recipeName) {
     return createBasicRecipeBookEntry(UUID.randomUUID(), user, recipeName);
   }
 
-  public RecipeBookEntry createBasicRecipeBookEntry(UUID id, User user, String recipeName) {
+  public static RecipeBookEntry createBasicRecipeBookEntry(UUID id, User user, String recipeName) {
     return new RecipeBookEntry(id, new Recipe(recipeName, Collections.emptyList(), "", Collections.emptyList()),
         Instant.now(), Instant.now(), user);
   }

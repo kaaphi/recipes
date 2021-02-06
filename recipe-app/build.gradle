@@ -14,4 +14,6 @@ dependencies {
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.1'
     implementation 'com.google.inject.extensions:guice-assistedinject:4.2.3'
+
+    testCompile "org.mockito:mockito-core:2.+"
 }

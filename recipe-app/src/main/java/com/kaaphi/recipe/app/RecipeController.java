@@ -1,6 +1,6 @@
 package com.kaaphi.recipe.app;
 
-import static com.kaaphi.recipe.app.SessionAttributes.CURRENT_USER;
+import static com.kaaphi.recipe.app.SessionAttributes.getUser;
 
 import com.github.rjeschke.txtmark.Processor;
 import com.google.common.collect.ImmutableMap;
@@ -20,7 +20,6 @@ import com.kaaphi.recipe.users.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
-import io.javalin.http.UnauthorizedResponse;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,12 +28,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,23 +178,6 @@ public class RecipeController {
 
     ctx.result(sb.toString());    
   }
-
-  public void readRecipeNames(Context ctx) {
-    Predicate<String> predicate = Optional.of(ctx.queryParam("q"))
-        .map(RecipeController::makeQueryPredicate)
-        .orElse(str -> true);
-
-    ctx.json(recipeRepo(ctx).getAll().stream()
-        .map(RecipeBookEntry::getRecipe)
-        .map(Recipe::getTitle)
-        .filter(predicate)
-        .collect(Collectors.toList()));
-  }
-
-  private static Predicate<String> makeQueryPredicate(String query) {
-    final String finalQuery = query.toLowerCase();
-    return str -> str.toLowerCase().contains(finalQuery);
-  }
   
   public void readRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
@@ -272,15 +252,6 @@ public class RecipeController {
   
   private RecipeRepository recipeRepo(Context ctx) {
     return recipeRepoFactory.createRepository(getUser(ctx));
-  }
-  
-  private static User getUser(Context ctx) {
-    User user = ctx.sessionAttribute(CURRENT_USER);
-    if(user == null) {
-      throw new UnauthorizedResponse();
-    } else {
-      return user;
-    }
   }
   
   private static UUID parseUUID(Context ctx) {
