@@ -31,7 +31,7 @@ jobs:
         run: ./gradlew recipe-db:build
 
       - name: Migrate DB
-        run: for f in /recipe-db/build/scripts/*; do echo Running $f; psql --set ON_ERROR_STOP=on -f $f; done
+        run: for f in ./recipe-db/build/scripts/*; do echo Running $f; psql --set ON_ERROR_STOP=on -f $f; done
         env:
           PGHOST: localhost
           PGUSER: postgres
