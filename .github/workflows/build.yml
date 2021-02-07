@@ -10,6 +10,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      database:
+        image: postgres:10.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v2
@@ -17,8 +26,23 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+
       - name: Build with Gradle
         run: ./gradlew build
+
+      - name: Migrate DB
+        run: for f in /recipe-db/build/scripts/*; do echo Running $f; psql --set ON_ERROR_STOP=on -f $f; done
+        env:
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: postgres
+
+      - name: Run Tests
+        run: ./gradlew test
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
 
       - name: Set up Docker Buildx
         id: buildx
