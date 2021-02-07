@@ -27,8 +27,8 @@ jobs:
         with:
           java-version: 11
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build DB scripts with Gradle
+        run: ./gradlew recipe-db:build
 
       - name: Migrate DB
         run: for f in /recipe-db/build/scripts/*; do echo Running $f; psql --set ON_ERROR_STOP=on -f $f; done
@@ -37,8 +37,8 @@ jobs:
           PGPASSWORD: postgres
           PGDATABASE: postgres
 
-      - name: Run Tests
-        run: ./gradlew test
+      - name: Build and Run Tests
+        run: ./gradlew build
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
