@@ -19,22 +19,31 @@ if($RebuildDB) {
   docker volume rm recipes_test_db
 }
 
-$BackupMount = "--mount type=bind,source=$(Resolve-Path $BackupPath),target=/docker-entrypoint-initdb.d"
-if($NoBackupRestore) {
-    $BackupMount = ""
-}
 
 Write-Host "Starting container."
-docker run `
---name test-recipe-db `
--d `
--p 5432:5432 `
--e POSTGRES_PASSWORD=mysecretpassword `
---network="$Network" `
---mount type=volume,source=recipes_test_db,target=/var/lib/postgresql/data `
-$BackupMount `
---mount type=bind,source=$(Resolve-Path build\scripts),target=/dbscripts `
-postgres:10.4-alpine
+if($NoBackupRestore) {
+    docker run `
+    --name test-recipe-db `
+    -d `
+    -p 5432:5432 `
+    -e POSTGRES_PASSWORD=mysecretpassword `
+    --network="$Network" `
+    --mount type=volume,source=recipes_test_db,target=/var/lib/postgresql/data `
+    --mount type=bind,source=$(Resolve-Path build\scripts),target=/dbscripts `
+    postgres:10.4-alpine
+} else {
+    docker run `
+    --name test-recipe-db `
+    -d `
+    -p 5432:5432 `
+    -e POSTGRES_PASSWORD=mysecretpassword `
+    --network="$Network" `
+    --mount type=volume,source=recipes_test_db,target=/var/lib/postgresql/data `
+    --mount type=bind,source=$(Resolve-Path $BackupPath),target=/docker-entrypoint-initdb.d `
+    --mount type=bind,source=$(Resolve-Path build\scripts),target=/dbscripts `
+    postgres:10.4-alpine
+
+}
 
 Start-Sleep -Seconds 2
 
