@@ -81,12 +81,6 @@ public class RecipeModule extends AbstractModule {
         );
   }
 
-  @Provides @Singleton
-  JedisPool provideJedisPool(@Named("redisHost") String redisHost) {
-    JedisPoolConfig config = new JedisPoolConfig();
-    return new JedisPool(config, redisHost);
-  }
-  
   @Provides
   DataSource provideDataSource(@Named("dbUrl") String dbUrlString) throws SQLException, IOException {
       //TODO pooling
