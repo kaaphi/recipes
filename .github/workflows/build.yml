@@ -27,18 +27,19 @@ jobs:
         with:
           java-version: 11
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build DB scripts with Gradle
+        run: ./gradlew recipe-db:build
 
       - name: Migrate DB
-        run: for f in /recipe-db/build/scripts/*; do echo Running $f; psql --set ON_ERROR_STOP=on -f $f; done
+        run: for f in ./recipe-db/build/scripts/*; do echo Running $f; psql --set ON_ERROR_STOP=on -f $f; done
         env:
+          PGHOST: localhost
           PGUSER: postgres
           PGPASSWORD: postgres
           PGDATABASE: postgres
 
-      - name: Run Tests
-        run: ./gradlew test
+      - name: Build and Run Tests
+        run: ./gradlew build
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -51,7 +52,7 @@ jobs:
       - name: Login to registry
         uses: docker/login-action@v1
         with:
-          registry: registry.kaaphi.com:8443
+          registry: ${{ secrets.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
@@ -61,14 +62,17 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: ./recipe-app
           file: ./recipe-app/Dockerfile
-          tags: "registry.kaaphi.com:8443/recipe-app:${{ github.event.inputs.version }}"
+          tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-app:${{ github.event.inputs.version }}"
           push: true
-      - name: Build and push db
-        uses: docker/build-push-action@v2
+      
+      - name: Push DB Scripts
+        uses: appleboy/scp-action@master
         with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: ./recipe-db
-          file: ./recipe-db/Dockerfile
-          tags: "registry.kaaphi.com:8443/recipe-db:${{ github.event.inputs.version }}"
-          push: true
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSHKEY }}
+          source: "./recipe-db/build/scripts/*"
+          target: "${{ secrets.DEPLOY_TARGET }}/${{ github.event.inputs.version }}"
+          rm: true
+          strip_components: 3
           
