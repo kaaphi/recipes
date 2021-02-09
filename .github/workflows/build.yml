@@ -64,12 +64,13 @@ jobs:
           file: ./recipe-app/Dockerfile
           tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-app:${{ github.event.inputs.version }}"
           push: true
-      - name: Build and push db
-        uses: docker/build-push-action@v2
+      
+      - name: Push DB Scripts
+        uses: appleboy/scp-action@master
         with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: ./recipe-db
-          file: ./recipe-db/Dockerfile
-          tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-db:${{ github.event.inputs.version }}"
-          push: true
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSHKEY }}
+          source: "./recipe-db/build/scripts/*"
+          target: "${{ secrets.DEPLOY_TARGET }}/${{ github.event.inputs.version }}"
           
