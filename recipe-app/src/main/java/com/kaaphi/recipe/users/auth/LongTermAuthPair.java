@@ -55,6 +55,12 @@ public class LongTermAuthPair {
     String[] parts = tokenString.split(":", 2);
     return new LongTermAuthTokenClient(parts[0], DECODER.decode(parts[1]));
   }
+
+  public static LongTermAuthTokenServer parseServerToken(String tokenString) {
+    String[] split = tokenString.split("::", 4);
+    return new LongTermAuthTokenServer(split[0], Base64.getDecoder().decode(split[1]), split[2],
+        Instant.ofEpochMilli(Long.parseLong(split[3])));
+  }
   
   private LongTermAuthPair(LongTermAuthTokenClient client, LongTermAuthTokenServer server) {
     this.client = client;
@@ -122,6 +128,10 @@ public class LongTermAuthPair {
     public boolean validate(LongTermAuthTokenClient clientToken) {
       byte[] hashedClient = hash(clientToken.getValidator());
       return selector.equals(clientToken.getSelector()) && MessageDigest.isEqual(hashedValidator, hashedClient);
+    }
+
+    public String toString() {
+      return String.format("%s::%s::%s::%d", selector, ENCODER.encodeToString(hashedValidator), username, expires.toEpochMilli());
     }
   }
 }

@@ -11,10 +11,13 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.kaaphi.recipe.app.SessionAttributes;
+import com.kaaphi.recipe.module.ConfigPropertiesLoader.ClassPathPropsStreamProvider;
+import com.kaaphi.recipe.module.ConfigPropertiesLoader.PathPropsStreamProvider;
 import com.kaaphi.recipe.repo.RecipeRepository;
 import com.kaaphi.recipe.repo.postgres.PostgresRecipeRepository;
 import com.kaaphi.recipe.repo.postgres.PostgresUserRepository;
@@ -22,7 +25,7 @@ import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserRepository;
 import com.kaaphi.recipe.users.auth.LongTermAuthRepository;
-import com.kaaphi.recipe.users.auth.MemoryLongTermAuthRepo;
+import com.kaaphi.recipe.users.auth.RedisLongTermAuthRepo;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.rendering.JavalinRenderer;
@@ -30,20 +33,20 @@ import io.javalin.plugin.rendering.template.JavalinVelocity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Supplier;
 import javax.sql.DataSource;
 import org.apache.velocity.app.VelocityEngine;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 public class RecipeModule extends AbstractModule {
   private static final Logger log = LoggerFactory.getLogger(RecipeModule.class);
@@ -53,7 +56,7 @@ public class RecipeModule extends AbstractModule {
   private final Class<? extends RecipeRepository> recipeRepoClass;
     
   public RecipeModule() {
-    this(PostgresUserRepository.class, MemoryLongTermAuthRepo.class, PostgresRecipeRepository.class);
+    this(PostgresUserRepository.class, RedisLongTermAuthRepo.class, PostgresRecipeRepository.class);
   }
   
   public RecipeModule(Class<? extends UserRepository> userRepoClass,
@@ -77,7 +80,12 @@ public class RecipeModule extends AbstractModule {
         .build(RecipeRepositoryFactory.class)
         );
   }
-  
+
+  @Provides @Singleton
+  JedisPool provideJedisPool(@Named("redisHost") String redisHost) {
+    JedisPoolConfig config = new JedisPoolConfig();
+    return new JedisPool(config, redisHost);
+  }
   
   @Provides
   DataSource provideDataSource(@Named("dbUrl") String dbUrlString) throws SQLException, IOException {
@@ -134,51 +142,14 @@ public class RecipeModule extends AbstractModule {
   }
   
   private Properties loadProperties() {
-    try {
-      Properties defaults = new Properties();
-      try(InputStream in = getClass().getClassLoader().getResourceAsStream("defaults.properties")) {
-        defaults.load(in);
-      }
-
-
-      Properties props = new Properties(defaults);
-
-      Optional<InputStream> customProps = findCustomPropertiesInputStream();
-      if(customProps.isPresent()) {
-        try(InputStream in = customProps.get()) {
-          props.load(in);
-        }
-      }
-      return props;
-
-    } catch (IOException e) {
-      throw new Error(e);
-    }
-  }
-
-  private Optional<InputStream> findCustomPropertiesInputStream() throws IOException {
-    //First try to find path from system properties
-    Optional<Path> path = Optional.ofNullable(System.getProperty("config"))
-        .map(Paths::get)
-        ;
-    if(path.isPresent()) {
-      log.info("Loading properties from system property path: {}", path.get());
-      if(Files.exists(path.get())) {
-        return Optional.of(Files.newInputStream(path.get()));
-      } else {
-        log.info("No config file exists.");
-      }
-    }
-    
-    //next try class path loading
-    InputStream classpathStream = getClass().getClassLoader().getResourceAsStream("config.properties");
-    if(classpathStream != null) {
-      log.info("Loading config.properties from classpath");
-      return Optional.of(classpathStream);
-    }
-    
-    log.info("No custom configuration properties found!");
-    return Optional.empty();
+    return ConfigPropertiesLoader.loadProps(
+        new ClassPathPropsStreamProvider("defaults.properties"),
+        Optional.ofNullable(System.getProperty("config"))
+            .<Supplier<Optional<InputStream>>>map(PathPropsStreamProvider::new)
+            .orElse(Optional::empty),
+        new PathPropsStreamProvider("config.properties"),
+        new ClassPathPropsStreamProvider("config.properties")
+    );
   }
 
   private static class InstantAdapter implements JsonSerializer<Instant>,JsonDeserializer<Instant> {
