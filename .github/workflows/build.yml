@@ -52,7 +52,7 @@ jobs:
       - name: Login to registry
         uses: docker/login-action@v1
         with:
-          registry: registry.kaaphi.com:8443
+          registry: ${{ secrets.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
@@ -62,7 +62,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: ./recipe-app
           file: ./recipe-app/Dockerfile
-          tags: "registry.kaaphi.com:8443/recipe-app:${{ github.event.inputs.version }}"
+          tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-app:${{ github.event.inputs.version }}"
           push: true
       - name: Build and push db
         uses: docker/build-push-action@v2
@@ -70,6 +70,6 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: ./recipe-db
           file: ./recipe-db/Dockerfile
-          tags: "registry.kaaphi.com:8443/recipe-db:${{ github.event.inputs.version }}"
+          tags: "${{ secrets.DOCKER_REGISTRY }}/recipe-db:${{ github.event.inputs.version }}"
           push: true
           
