@@ -73,5 +73,6 @@ jobs:
           key: ${{ secrets.DEPLOY_SSHKEY }}
           source: "./recipe-db/build/scripts/*"
           target: "${{ secrets.DEPLOY_TARGET }}/${{ github.event.inputs.version }}"
+          rm: true
           strip_components: 3
           
