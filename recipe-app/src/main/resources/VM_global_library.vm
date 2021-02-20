@@ -43,7 +43,7 @@
 #set ( $navs = {
 "create" : ["New Recipe", "/recipe/new", false],
 "edit" : ["Edit Recipe", "/recipe/$recipeId/edit", true],
-"delete" : ["Delete Recipe", "/recipe/$recipeId/delete", true]
+"delete" : ["Remove Recipe", "/recipe/$recipeId/delete", true]
 } )
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
   <a class="navbar-brand brand" href="/">Recipes</a>

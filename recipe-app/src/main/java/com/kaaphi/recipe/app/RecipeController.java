@@ -232,6 +232,7 @@ public class RecipeController {
   
   public void deleteRecipe(Context ctx) {
     UUID uuid = parseUUID(ctx);
+    boolean isArchive = Optional.ofNullable(ctx.queryParam("archive")).map(Boolean::valueOf).orElse(false);
     
     RecipeRepository repo = recipeRepo(ctx);
     User user = getUser(ctx);
@@ -242,7 +243,11 @@ public class RecipeController {
     } else if(!current.getOwner().equals(user)) {
       ctx.status(401);
     } else {
-      repo.delete(uuid);
+      if(isArchive) {
+        repo.archiveById(Collections.singleton(uuid));
+      } else {
+        repo.delete(uuid);
+      }
     }
   } 
   
