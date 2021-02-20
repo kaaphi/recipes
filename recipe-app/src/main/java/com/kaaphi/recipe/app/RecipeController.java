@@ -12,13 +12,14 @@ import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.renderer.RecipeMarkdownProcessor;
 import com.kaaphi.recipe.repo.RecipeRepository;
-import com.kaaphi.recipe.repo.RecipeRepository.RecipeCategory;
+import com.kaaphi.recipe.repo.RecipeRepository.RecipeScope;
 import com.kaaphi.recipe.repo.RecipeSearchResult;
 import com.kaaphi.recipe.txtformat.TextFormat;
 import com.kaaphi.recipe.users.RecipeRepositoryFactory;
 import com.kaaphi.recipe.users.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
+import io.javalin.http.Handler;
 import io.javalin.http.NotFoundResponse;
 import java.time.Instant;
 import java.util.Collection;
@@ -28,9 +29,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,21 +56,17 @@ public class RecipeController {
 	  ctx.render("/recipeList.html", getRecipeListModel(ctx, "All Recipes", RecipeRepository::getAll));
   }
   
-  public void renderOwnedRecipeList(Context ctx) {
-    ctx.render("/recipeList.html", getRecipeListModel(ctx, "My Recipes", RecipeRepository::getOwned));
-  }
-  
-  public void renderSharedRecipeList(Context ctx) {
-    ctx.render("/recipeList.html", getRecipeListModel(ctx, "Shared Recipes", RecipeRepository::getShared));
+  public Handler renderRecipeList(String title, RecipeScope scope) {
+    return ctx ->
+      ctx.render("/recipeList.html", getRecipeListModel(ctx, title, r -> r.getRecipeSet(scope)));
   }
   
   public void renderRecipeSearch(Context ctx) {
     String searchString = ctx.queryParam("q");
-    RecipeCategory scope = RecipeCategory.optionalValueOf(ctx.queryParam("scope")).orElse(RecipeCategory.OWNED);
-    boolean includeArchive = Optional.ofNullable(ctx.queryParam("includeArchive")).map(Boolean::valueOf).orElse(false);
-    
+    RecipeScope scope = RecipeScope.optionalValueOf(ctx.queryParam("scope")).orElse(RecipeScope.OWNED);
+
     if(searchString != null) {
-      Set<RecipeSearchResult> results = recipeRepo(ctx).searchRecipes(scope, includeArchive, searchString);
+      Set<RecipeSearchResult> results = recipeRepo(ctx).searchRecipes(scope, searchString);
 
       if(results.size() == 1 && results.iterator().next().isTitleMatch()) {
         //if we only matched one thing and it was by title, just redirect to the recipe instead
@@ -123,11 +120,12 @@ public class RecipeController {
   
   public Map<String, Object> getRecipeEditModel(Context ctx) {
     RecipeBookEntry r = recipeRepo(ctx).get(parseUUID(ctx));
-    
+
     return model(b -> b
         .put("recipe", r)
-        .put("recipeTxt", txtFormat.toTextString(r.getRecipe()))     
-        );
+        .put("ownedByCurrentUser", r.getOwner().equals(getUser(ctx)))
+        .put("recipeTxt", txtFormat.toTextString(r.getRecipe()))
+    );
   }
   
   public Map<String, Object> getRecipeModel(Context ctx) {
@@ -194,22 +192,10 @@ public class RecipeController {
   }
   
   public void updateRecipe(Context ctx) {
-    UUID id = parseUUID(ctx);
-    
     Recipe recipe = parseRecipe(ctx);
-    
-    RecipeRepository repo = recipeRepo(ctx);
-    User user = getUser(ctx);
-    
-    RecipeBookEntry current = repo.get(id);
-    if(current == null) {
-      ctx.status(404);
-    } else if(!current.getOwner().equals(user)) {
-      ctx.status(401);
-    } else {
-      RecipeBookEntry entry = new RecipeBookEntry(id, recipe, current.getCreated(), Instant.now(), user, current.isArchived());
-      repo.save(entry);
-    }
+    forEntry(ctx, (repo, entry) ->
+        repo.save(new RecipeBookEntry(entry.getId(), recipe, entry.getCreated(), Instant.now(), entry.getOwner(), entry.isArchived()))
+    );
   }
   
   private Recipe parseRecipe(Context ctx) {
@@ -231,25 +217,38 @@ public class RecipeController {
   }
   
   public void deleteRecipe(Context ctx) {
+    forEntry(ctx, (repo, entry) -> repo.delete(entry));
+  }
+
+  public void archiveRecipe(Context ctx) {
+    forEntry(ctx, (repo, entry) -> {
+      repo.archiveById(Collections.singleton(entry.getId()));
+      ctx.redirect("/recipe/" + entry.getId());
+    });
+  }
+
+  public void restoreRecipe(Context ctx) {
+    forEntry(ctx, (repo, entry) -> {
+      repo.unarchiveById(Collections.singleton(entry.getId()));
+      ctx.redirect("/recipe/" + entry.getId());
+    });
+  }
+
+  private void forEntry(Context ctx, BiConsumer<RecipeRepository, RecipeBookEntry> consumer) {
     UUID uuid = parseUUID(ctx);
-    boolean isArchive = Optional.ofNullable(ctx.queryParam("archive")).map(Boolean::valueOf).orElse(false);
-    
+
     RecipeRepository repo = recipeRepo(ctx);
     User user = getUser(ctx);
-    
+
     RecipeBookEntry current = repo.get(uuid);
     if(current == null) {
       ctx.status(404);
     } else if(!current.getOwner().equals(user)) {
       ctx.status(401);
     } else {
-      if(isArchive) {
-        repo.archiveById(Collections.singleton(uuid));
-      } else {
-        repo.delete(uuid);
-      }
+      consumer.accept(repo, current);
     }
-  } 
+  }
   
   public void render(Context ctx) {
     UUID uuid = parseUUID(ctx);

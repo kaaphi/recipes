@@ -9,7 +9,7 @@ import com.kaaphi.recipe.IngredientList;
 import com.kaaphi.recipe.Recipe;
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.app.TestRecipeModule;
-import com.kaaphi.recipe.repo.RecipeRepository.RecipeCategory;
+import com.kaaphi.recipe.repo.RecipeRepository.RecipeScope;
 import com.kaaphi.recipe.users.User;
 import com.kaaphi.recipe.users.UserShare;
 import java.time.Instant;
@@ -94,8 +94,8 @@ public class RecipeRepoITest {
 
     assertTrue(user1Repo.get(lastId).isArchived());
 
-    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getAll(true).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
-    assertEquals(Collections.emptySet(), user1Repo.getAll(false).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getRecipes(RecipeScope.ARCHIVED).map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+    assertEquals(Collections.emptySet(), user1Repo.getRecipes(RecipeScope.OWNED).map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
   }
 
   @Test
@@ -106,8 +106,8 @@ public class RecipeRepoITest {
 
     assertFalse(user1Repo.get(lastId).isArchived());
 
-    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getAll(true).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
-    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getAll(false).stream().map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+    assertEquals(Collections.singleton(BASIC_TEST_RECIPE), user1Repo.getRecipes(RecipeScope.OWNED).map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
+    assertEquals(Collections.emptySet(), user1Repo.getRecipes(RecipeScope.ARCHIVED).map(RecipeBookEntry::getRecipe).collect(Collectors.toSet()));
   }
 
   @Test
@@ -128,18 +128,18 @@ public class RecipeRepoITest {
     );
 
     assertEquals(user1ids, asUUIDSet(user1Repo.getAll()));
-    assertEquals(user1ids, asUUIDSet(user1Repo.getOwned()));
-    assertEquals(Collections.emptySet(), asUUIDSet(user1Repo.getShared()));
-    assertEquals(user1ids, asUUIDSet(user1Repo.getCategory(RecipeCategory.ALL)));
-    assertEquals(user1ids, asUUIDSet(user1Repo.getCategory(RecipeCategory.OWNED)));
-    assertEquals(Collections.emptySet(), asUUIDSet(user1Repo.getCategory(RecipeCategory.SHARED)));
+    assertEquals(user1ids, asUUIDSet(user1Repo.getRecipeSet(RecipeScope.OWNED)));
+    assertEquals(Collections.emptySet(), asUUIDSet(user1Repo.getRecipeSet(RecipeScope.SHARED)));
+    assertEquals(user1ids, asUUIDSet(user1Repo.getRecipes(RecipeScope.ALL)));
+    assertEquals(user1ids, asUUIDSet(user1Repo.getRecipes(RecipeScope.OWNED)));
+    assertEquals(Collections.emptySet(), asUUIDSet(user1Repo.getRecipes(RecipeScope.SHARED)));
 
     assertEquals(both, asUUIDSet(user2Repo.getAll()));
-    assertEquals(user2ids, asUUIDSet(user2Repo.getOwned()));
-    assertEquals(user1ids, asUUIDSet(user2Repo.getShared()));
-    assertEquals(both, asUUIDSet(user2Repo.getCategory(RecipeCategory.ALL)));
-    assertEquals(user2ids, asUUIDSet(user2Repo.getCategory(RecipeCategory.OWNED)));
-    assertEquals(user1ids, asUUIDSet(user2Repo.getCategory(RecipeCategory.SHARED)));
+    assertEquals(user2ids, asUUIDSet(user2Repo.getRecipeSet(RecipeScope.OWNED)));
+    assertEquals(user1ids, asUUIDSet(user2Repo.getRecipeSet(RecipeScope.SHARED)));
+    assertEquals(both, asUUIDSet(user2Repo.getRecipes(RecipeScope.ALL)));
+    assertEquals(user2ids, asUUIDSet(user2Repo.getRecipes(RecipeScope.OWNED)));
+    assertEquals(user1ids, asUUIDSet(user2Repo.getRecipes(RecipeScope.SHARED)));
   }
 
   private static Set<UUID> asUUIDSet(Stream<RecipeBookEntry> entries) {

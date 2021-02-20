@@ -2,6 +2,7 @@ package com.kaaphi.recipe.repo;
 
 import com.kaaphi.recipe.RecipeBookEntry;
 import com.kaaphi.recipe.users.User;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -13,57 +14,54 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface RecipeRepository {
-  enum RecipeCategory {
+  enum RecipeScope {
     ALL,
     OWNED,
-    SHARED;
+    SHARED,
+    ARCHIVED;
     
-    public static Optional<RecipeCategory> optionalValueOf(String str) {
+    public static Optional<RecipeScope> optionalValueOf(String str) {
       return str == null ? Optional.empty() : Stream.of(values())
       .filter(c -> c.name().equals(str))
       .findAny();
     }
   }
 
-  Set<RecipeBookEntry> getAll(boolean includeArchive);
+  Set<RecipeBookEntry> getAll();
 
-  default Set<RecipeBookEntry> getAll() {
-    return getAll(false);
-  }
-  default Set<RecipeBookEntry> getOwned() {
-    return getAll().stream()
-        .filter(r -> r.getOwner().equals(getUser()))
+  default Set<RecipeBookEntry> getRecipeSet(RecipeScope scope) {
+    return getRecipes(scope)
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
-  default Set<RecipeBookEntry> getShared() {
-    return getAll().stream()
-        .filter(r -> !r.getOwner().equals(getUser()))
-        .collect(Collectors.toCollection(LinkedHashSet::new));
-  }
-  default Stream<RecipeBookEntry> getCategory(RecipeCategory category) {
-    Optional<Predicate<RecipeBookEntry>> filter;
-    switch(category) {
-      case OWNED:
-        filter = Optional.of(r -> r.getOwner().equals(getUser()));
-        break;
-        
-      case SHARED:
-        filter = Optional.of(r -> !r.getOwner().equals(getUser()));
-        break;
-        
-      case ALL:
-      default:
-        filter = Optional.empty();        
-    }
+
+  default Stream<RecipeBookEntry> getRecipes(RecipeScope... scope) {
+    Optional<Predicate<RecipeBookEntry>> filter = Arrays.stream(scope)
+        .<Predicate<RecipeBookEntry>>map(s -> {
+              switch (s) {
+                case OWNED:
+                  return r -> r.getOwner().equals(getUser()) && !r.isArchived();
+
+                case SHARED:
+                  return r -> !r.getOwner().equals(getUser());
+
+                case ARCHIVED:
+                  return RecipeBookEntry::isArchived;
+
+                case ALL:
+                default:
+                  return __ -> true;
+              }
+            })
+        .reduce(Predicate::or);
     
     Stream<RecipeBookEntry> allRecipeBookEntries = getAll().stream();
     return filter.map(allRecipeBookEntries::filter).orElse(allRecipeBookEntries);
   }
   
-  default Set<RecipeSearchResult> searchRecipes(RecipeCategory category, boolean includeArchive, String searchString) {
+  default Set<RecipeSearchResult> searchRecipes(RecipeScope scope, String searchString) {
     RecipeSearch search = new RecipeSearch(searchString);
     
-    return getCategory(category)
+    return getRecipes(scope)
     .map(search::createResultForRecipe)
     .filter(Objects::nonNull)
     .sorted()

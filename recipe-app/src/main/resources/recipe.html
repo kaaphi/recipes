@@ -3,7 +3,7 @@
   #head( $recipe.recipe.title )
   <body>
   #scripts()
-  #navbar ( "", $recipe.id )
+  #navbar ( "", $recipe )
   <div class="container-fluid">
   
   <div class="row"><div class="col">
@@ -16,6 +16,12 @@
   #if(!$ownedByCurrentUser)
   <div class="row"><div class="col">
   <p class="font-italic">a recipe by $owner</p>
+  </div></div>
+  #end
+
+  #if($recipe.isArchived())
+  <div class="row"><div class="col">
+    <p class="font-italic">(ARCHIVED)</p>
   </div></div>
   #end
   

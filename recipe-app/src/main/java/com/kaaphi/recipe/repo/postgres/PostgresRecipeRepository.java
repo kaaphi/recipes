@@ -40,11 +40,10 @@ public class PostgresRecipeRepository extends AbstractPostgresRepository
   }
 
   @Override
-  public Set<RecipeBookEntry> getAll(boolean includeArchive) {
-    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime, username, isArchived FROM getAllRecipes(?, ?)",
+  public Set<RecipeBookEntry> getAll() {
+    return executeQueryStream("SELECT id, recipe, createdTime, updatedTime, username, isArchived FROM getAllRecipes(?, true)",
         stmt -> {
           stmt.setInt(1, user.getId());
-          stmt.setBoolean(2, includeArchive);
         },
         this::getRecipeBookEntryFromResultSet)
     .collect(Collectors.toCollection(LinkedHashSet::new));

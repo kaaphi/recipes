@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.kaaphi.recipe.module.ProductionRecipeModule;
+import com.kaaphi.recipe.repo.RecipeRepository.RecipeScope;
 import com.kaaphi.recipe.users.UserRole;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class RecipeApp {
       });
       
       path("/", () -> {
-        get(controller::renderOwnedRecipeList, roles(UserRole.USER));
+        get(controller.renderRecipeList("My Recipes", RecipeScope.OWNED), roles(UserRole.USER));
       });
 
       path("/all", () -> {
@@ -64,7 +65,11 @@ public class RecipeApp {
       });
 
       path("/shared", () -> {
-        get(controller::renderSharedRecipeList, roles(UserRole.USER));
+        get(controller.renderRecipeList("Shared Recipes", RecipeScope.SHARED), roles(UserRole.USER));
+      });
+
+      path("/archived", () -> {
+        get(controller.renderRecipeList("Archived Recipes", RecipeScope.ARCHIVED), roles(UserRole.USER));
       });
 
       path("/login", () -> {
@@ -98,8 +103,10 @@ public class RecipeApp {
         
         path("delete", () -> {
           get(controller::renderDeleteRecipe, roles(UserRole.USER));
-      });
+        });
 
+        get("archive", controller::archiveRecipe, roles(UserRole.USER));
+        get("restore", controller::restoreRecipe, roles(UserRole.USER));
       });
     });
     

@@ -9,7 +9,7 @@
     /*
      * I am not a JS guy. This is totally naive code written from google searches.
      */
-  function deleteRecipe(archive) {
+  function deleteRecipe() {
   var XHR = new XMLHttpRequest();
         
   // Redirect on success
@@ -22,7 +22,7 @@
     alert('Oops! Something goes wrong.');
   });
   
-  XHR.open('DELETE', '/api/recipe/$recipe.id?archive='+archive);
+  XHR.open('DELETE', '/api/recipe/$recipe.id');
   XHR.send(null);
     }
     </script>
@@ -32,8 +32,7 @@
     </div>
     <form>
   	  <div class="form-group">
- 	  <button type="button" class="btn btn-secondary" onClick="deleteRecipe(false)">Delete</button>
-    <button type="button" class="btn btn-secondary" onClick="deleteRecipe(true)">Archive</button>
+ 	  <button type="button" class="btn btn-secondary" onClick="deleteRecipe()">Delete</button>
  	  <button type="button" class="btn btn-primary" onClick="window.location.href = '/recipe/$recipe.id'">Cancel</button>
  	  </div>
  	</form>
