@@ -66,6 +66,10 @@ public class RecipeSearch {
   }
   
   StringMatch scoreString(String string, boolean fullContext) {
+    if(searchString.isEmpty()) {
+      return new StringMatch(0, null, null, null);
+    }
+
     String toSearch = string.toLowerCase();
     
     int score = 0;
